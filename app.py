@@ -1,3 +1,4 @@
+import requests
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -15,6 +16,8 @@ def peticion_objeto():
     if request.method == 'GET':
         return 'Hola, soy un agente'
     else:
+        
+
         return 'POST recibido'
 
 
@@ -27,5 +30,5 @@ def sumador():
 
 if __name__ == '__main__':
     app.run()
-
-
+    
+   
