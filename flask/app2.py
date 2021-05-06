@@ -11,7 +11,7 @@ g = Graph()
 
 url = 'http://127.0.0.1:5000/'
 
-array = ["pepito","a"]
+array = ["pepito", "a"]
 
 url2 = 'http://127.0.0.1:5000/persona'
 
@@ -22,18 +22,16 @@ def getHotels():
 
     client = foursquare.Foursquare(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 
-    v = client.venues.search(params={'ll':'41.4,2.14',
-                                    'intent':'browse',
-                                    'radius':'4000',
-                                    'query':'museo'})
+    v = client.venues.search(params={'ll': '41.4,2.14',
+                                     'intent': 'browse',
+                                     'radius': '4000',
+                                     'query': 'museo'})
     k = v["venues"]
     for result in k:
         print(result["name"])
 
 
-
 def prueba():
-
     sparql = SPARQLWrapper("http://dbpedia.org/sparql")
     sparql.setQuery("""
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -64,13 +62,15 @@ def prueba():
     g.add((maria, FOAF.name, Literal('Maria')))
     g.add((pedro, FOAF.knows, maria))
 
+
 @app.route('/persona')
 def hello2():
     mm = Namespace(url2)
     if (mm.jose, RDF.type, FOAF.Person) in g:
-     print("Pedro es una persona")
+        print("Pedro es una persona")
 
     return "Hello, World!"
+
 
 @app.route('/')
 def hello():
@@ -80,12 +80,11 @@ def hello():
     return "Hello, World!"
 
 
-
 @app.route('/agente', methods=['GET', 'POST'])
 def peticion_objeto():
     if request.method == 'GET':
-        #peticion = {'x': 22, 'y': 65}
-        #r = requests.get(url + '/sumador', params=peticion)
+        # peticion = {'x': 22, 'y': 65}
+        # r = requests.get(url + '/sumador', params=peticion)
         print(array)
         return array[2]
     else:
@@ -98,9 +97,9 @@ def peticion_objeto():
 def sumador():
     x = int(request.args['x'])
     y = int(request.args['y'])
-    return str(x+y)
+    return str(x + y)
 
 
 if __name__ == '__main__':
     app.run()
-    
+
