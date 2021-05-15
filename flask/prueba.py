@@ -1,4 +1,4 @@
-from rdflib import URIRef, BNode, Literal, Namespace, RDF, FOAF
+from rdflib import URIRef, BNode, Literal, Namespace, RDF, FOAF, Graph
 
 
 
