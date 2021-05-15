@@ -34,14 +34,9 @@ def getHotels():
         """)
     sparql.setReturnFormat(JSON)
     results = sparql.query().convert()
+    print(results)
 
-    for result in results["results"]["bindings"]:
-        print(result["label"]["value"])
 
-    print('---------------------------')
-
-    for result in results["results"]["bindings"]:
-        print('%s: %s' % (result["label"]["xml:lang"], result["label"]["value"]))
 
 
     
@@ -104,4 +99,4 @@ def sumador():
 
 if __name__ == '__main__':
     app.run()
-    
+
