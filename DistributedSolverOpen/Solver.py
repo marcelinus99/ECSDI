@@ -8,12 +8,14 @@ Solver
 
     Solver generico que pasa los problemas a solvers especializados
 
-:Authors: bejar
-    
+:Authors:
+    Carles Llongueras Aparicio
+    Alexandre Fló Cuesta
+    Marc González Moratona
 
-:Version: 
+:Version:
 
-:Created on: 06/02/2018 8:20 
+:Created on: 18/05/2021 17:06
 
 """
 
@@ -77,8 +79,14 @@ def message():
             if messtype == 'SOLVE':
                 param = messparam.split(',')
                 if len(param) == 6:
+                    origin = ''
+                    minp = ''
+                    maxp = ''
+                    ludic = ''
+                    cultural = ''
+                    party = ''
                     problem, clientaddress, probid, start, end, destination = param
-                    problems[probid] = [problem, clientaddress, probid, start, end, destination, 'PENDING']
+                    problems[probid] = [problem, clientaddress, probid, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
                     # Buscamos el resolvedor del tipo adecuado y le mandamos el problema
                     if problem in ['REQALLOTJAMENT', 'REQTRANSPORT', 'REQACT']:
                         minionadd = requests.get(diraddress + '/message',

@@ -1,19 +1,22 @@
 """
-.. module:: Arithmetic
+.. module:: AllotjamentAgent
 
-Arithmetic
+AllotjamentAgent
 *************
 
-:Description: Arithmetic
+:Description: Allotjament Agent
 
- Evalua la expresion aritmetica de un string
+    Buscador de alojamientos para un paquete de viaje
 
-:Authors: bejar
+:Authors:
+    Carles Llongueras Aparicio
+    Alexandre Fló Cuesta
+    Marc González Moratona
 
 
 :Version:
 
-:Created on: 06/02/2018 8:21
+:Created on: 18/05/2021 17:06
 
 """
 import argparse

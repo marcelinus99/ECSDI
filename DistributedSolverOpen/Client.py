@@ -1,17 +1,22 @@
 """
-.. module:: UsuariAgent
+.. module:: Client
 
-UsuariAgent
+Client
 *************
 
-:Description: UsuariAgent
+:Description: Client
 
     Cliente del resolvedor distribuido
 
-:Authors: Marc González Moratona
-    
+:Authors:
+    Carles Llongueras Aparicio
+    Alexandre Fló Cuesta
+    Marc González Moratona
 
-:Version: 
+
+:Version:
+
+:Created on: 18/05/2021 17:06
 
 :Created on: 19/05/2021 10:27
 
@@ -120,20 +125,26 @@ def send_message(problem, start, end, destination):
     # Busca un solver en el servicio de directorio
     solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
     # Solver encontrado
+    origin = ''
+    minp = ''
+    maxp = ''
+    ludic = ''
+    cultural = ''
+    party = ''
     if 'OK' in solveradd:
         # Le quitamos el OK de la respuesta
         solveradd = solveradd[4:]
 
-        problems[probid] = [problem, start, end, destination, 'PENDING']
+        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
         mess = f'SOLVE|{problem},{clientadd},{probid},{start},{end},{destination}'
         resp = requests.get(solveradd + '/message', params={'message': mess}).text
         if 'ERROR' not in resp:
-            problems[probid] = [problem, start, end, destination, 'PENDING']
+            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
         else:
-            problems[probid] = [problem, start, end, destination, 'FAILED SOLVER']
+            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED SOLVER']
     # Solver no encontrado
     else:
-        problems[probid] = (problem, start, end, destination, 'FAILED DS')
+        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED DS']
 
 
 if __name__ == '__main__':

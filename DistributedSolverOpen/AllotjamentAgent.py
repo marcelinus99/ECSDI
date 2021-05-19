@@ -1,19 +1,22 @@
 """
-.. module:: LetterCounter
+.. module:: AllotjamentAgent
 
-WordCounter
+AllotjamentAgent
 *************
 
-:Description: LetterCounter
+:Description: Allotjament Agent
 
-    Calcula la frecuencia de las letras de un string y retorna las 10 mas frecuentes
+    Buscador de alojamientos para un paquete de viaje
 
-:Authors: bejar
+:Authors:
+    Carles Llongueras Aparicio
+    Alexandre Fló Cuesta
+    Marc González Moratona
 
 
 :Version:
 
-:Created on: 06/02/2018 15:58
+:Created on: 18/05/2021 17:06
 
 """
 
