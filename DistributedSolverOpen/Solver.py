@@ -62,6 +62,7 @@ def message():
     if '|' not in mess:
         return 'ERROR: INVALID MESSAGE'
     else:
+
         # Sintaxis de los mensajes "TIPO|PARAMETROS"
         mess = mess.split('|')
         if len(mess) != 2:
@@ -77,24 +78,20 @@ def message():
                 param = messparam.split(',')
                 if len(param) == 4:
                     probtype, clientaddress, probid, prob = param
-                    problems[probid] = [probtype, clientaddress, prob, 'PENDING']
+                    problems[probid] = [probtype, clientaddress, prob, 'PENDING2']
                     # Buscamos el resolvedor del tipo adecuado y le mandamos el problema
-                    if probtype in ['ARITH', 'MFREQ']:
+                    if probtype in ['ARITH', 'REQALLOTJAMENT']:
                         minionadd = requests.get(diraddress + '/message',
                                                  params={'message': f'SEARCH|{probtype}'}).text
                         if 'OK' in minionadd:
                             # Le quitamos el OK de la respuesta
+
                             minionadd = minionadd[4:]
                             mess = 'SOLVE|%s,%s,%s' % (solveradd, probid, prob)
-                            requests.get(minionadd + '/message', params={'message': mess})
+                            return requests.get(minionadd + '/message', params={'message': mess})
 
                             # Registramos la actividad en el logger si existe
-                            if logger is not None:
-                                try:
-                                    requests.get(logger + '/message', params={'message': f'{solverid},{probtype}'},
-                                                 timeout=5)
-                                except Exception:
-                                    pass
+
                         else:
                             problems[probid][3] = 'FAILED SOLVER'
                             return 'ERROR: NO SOLVERS AVAILABLE'

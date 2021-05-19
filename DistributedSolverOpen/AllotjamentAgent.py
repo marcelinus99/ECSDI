@@ -58,9 +58,9 @@ def message():
             if messtype == 'SOLVE':
                 param = messparam.split(',')
                 if len(param) == 3:
-                    solveraddress, probid, prob = param
-                    p1 = Process(target=solver, args=(solveraddress, probid, prob))
-                    p1.start()
+                    #solveraddress, probid, prob = param
+                    #p1 = Process(target=solver, args=(solveraddress, probid, prob))
+                    #p1.start()
                     return 'OK'
                 else:
                     return 'ERROR: WRONG PARAMETERS'
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     # Registramos el solver aritmetico en el servicio de directorio
     solveradd = f'http://{hostaddr}:{port}'
     solverid = hostaddr.split('.')[0] + '-' + str(port)
-    mess = f'REGISTER|{solverid},MFREQ,{solveradd}'
+    mess = f'REGISTER|{solverid},REQALLOTJAMENT,{solveradd}'
 
     done = False
     while not done:
@@ -137,7 +137,7 @@ if __name__ == '__main__':
             pass
 
     if 'OK' in resp:
-        print(f'FREQ {solverid} successfully registered')
+        print(f'REQALLOTJAMENT {solverid} successfully registered')
         # Ponemos en marcha el servidor Flask
         app.run(host=hostname, port=port, debug=False, use_reloader=False)
 

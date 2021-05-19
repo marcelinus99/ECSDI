@@ -46,7 +46,7 @@ def message():
 
     # if request.form.has_key('message'):
     if 'message' in request.form:
-        send_message("Barcelona", "hola")
+        send_message("REQALLOTJAMENT", "hola")
         return redirect(url_for('.iface'))
     else:
         # Respuesta del solver SOLVED|PROBID,SOLUTION
@@ -119,17 +119,16 @@ def send_message(cityname, problem):
 
     # Busca un sotver en el servicio de directorio
     solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
-    solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
     # Solver encontrado
     if 'OK' in solveradd:
         # Le quitamos el OK de la respuesta
         solveradd = solveradd[4:]
 
-        problems[probid] = [cityname, problem, 'PENDING']
+        problems[probid] = [cityname, problem, 'HOLA']
         mess = f'SOLVE|{cityname},{clientadd},{probid},{sanitize(problem)}'
         resp = requests.get(solveradd + '/message', params={'message': mess}).text
         if 'ERROR' not in resp:
-            problems[probid] = [cityname, problem, 'PENDING']
+            problems[probid] = [cityname, problem, "PENDING3"]
         else:
             problems[probid] = [cityname, problem, 'FAILED SOLVER']
     # Solver no encontrado
