@@ -10,10 +10,9 @@ Diferentes funciones comunes a los agentes implementados en ECSDI
 
 """
 
-from flask import request
-
 __author__ = 'bejar'
 
+from flask import request
 
 
 def shutdown_server():

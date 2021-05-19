@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TravelPack</title>
+</head>
+<body>
+
+    <form action="/message" method="post">
+        <label for="start">Fecha de ida:</label>
+        <input type="date" id="start" name="trip-start"
+           value="2021-06-13"
+           min="2021-01-01" max="2022-12-31">
+
+        <br><br>
+
+        <label for="end">Fecha de vuelta:</label>
+        <input type="date" id="end" name="trip-end"
+           value="2021-06-20"
+           min="2021-01-01" max="2022-12-31">
+
+        <br>
+        <p><label for="origin-city">Ciudad de origen:</label> </p>
+        <select id="origin-city" name="origin-city" method="GET" action="/">
+            {% for c in cities %}
+            <option value={{c}}>{{c}}</option>
+            {% endfor %}
+        </select>
+
+        <p><label for="destination-city">Ciudad de destino:</label> </p>
+        <select id="destination-city" name="destination-city" method="GET" action="/">
+            {% for c in cities %}
+            <option value={{c}}>{{c}}</option>
+            {% endfor %}
+        </select>
+
+        <p><label>Indica cuánto quieres pagar por tu viaje:</label> </p>
+        <div class="price-slider"><span>
+            <label for="price-min">Precio mínimo:</label>
+            <input type="number" value="200" min="0" max="1000"/>
+            <input type="range" name="price-min" id="price-min" value="200" min="0" max="1000" step="1">
+            <br><br>
+            <label for="price-max">Precio máximo:</label>
+            <input type="number" value="800" min="0" max="1000"/></span>
+            <input type="range" name="price-max" id="price-max" value="800" min="0" max="1000" step="1">
+            <br>
+        </div>
+
+        <p><label>Indica cómo quieres que sean las actividades de tu viaje:</label> </p>
+        <p><label for="ludic-activities"> Lúdicas </label></p>
+        <select id="ludic-activities" name="ludic-activities" method="GET" action="/">
+            {% for t in activitytype %}
+            <option value={{t}}>{{t}}</option>
+            {% endfor %}
+        </select>
+        <p><label for="cultural-activities"> Culturales </label></p>
+        <select id="cultural-activities" name="cultural-activities" method="GET" action="/">
+            {% for t in activitytype %}
+            <option value={{t}}>{{t}}</option>
+            {% endfor %}
+        </select>
+        <p><label for="party-activities"> Festivas </label></p>
+        <select id="party-activities" name="party-activities" method="GET" action="/">
+            {% for t in activitytype %}
+            <option value={{t}}>{{t}}</option>
+            {% endfor %}
+        </select>
+
+        <p> <button type="submit" name="message" value='message'>Búscame un viaje</button> </p>
+    </form>
+</body>
+</html>
