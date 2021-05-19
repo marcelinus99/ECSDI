@@ -58,9 +58,9 @@ def message():
             if messtype == 'SOLVE':
                 param = messparam.split(',')
                 if len(param) == 3:
-                    #solveraddress, probid, prob = param
-                    #p1 = Process(target=solver, args=(solveraddress, probid, prob))
-                    #p1.start()
+                    solveraddress, probid, prob = param
+                    p1 = Process(target=solver, args=(solveraddress, probid, prob))
+                    p1.start()
                     return 'OK'
                 else:
                     return 'ERROR: WRONG PARAMETERS'
@@ -82,10 +82,11 @@ def solver(saddress, probid, prob):
     :param param:
     :return:
     """
-    try:
-        res = ''.join([x for x, _ in Counter(prob).most_common(10)])
-    except Exception:
-        res = 'ERROR: NON ASCII CHARACTERS'
+    #try:
+        #res = ''.join([x for x, _ in Counter(prob).most_common(10)])
+    #except Exception:
+        #res = 'ERROR: NON ASCII CHARACTERS'
+    res = ''
     requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
 
 
@@ -139,7 +140,7 @@ if __name__ == '__main__':
     if 'OK' in resp:
         print(f'REQALLOTJAMENT {solverid} successfully registered')
         # Ponemos en marcha el servidor Flask
-        app.run(host=hostname, port=port, debug=False, use_reloader=False)
+        app.run(host=hostname, port=port, debug=True, use_reloader=False)
 
         mess = f'UNREGISTER|{solverid}'
         requests.get(diraddress + '/message', params={'message': mess})

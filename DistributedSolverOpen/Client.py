@@ -117,18 +117,18 @@ def send_message(cityname, problem):
     probid = f'{clientid}-{probcounter:03}'
     probcounter += 1
 
-    # Busca un sotver en el servicio de directorio
+    # Busca un solver en el servicio de directorio
     solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
     # Solver encontrado
     if 'OK' in solveradd:
         # Le quitamos el OK de la respuesta
         solveradd = solveradd[4:]
 
-        problems[probid] = [cityname, problem, 'HOLA']
+        problems[probid] = [cityname, problem, 'PENDING']
         mess = f'SOLVE|{cityname},{clientadd},{probid},{sanitize(problem)}'
         resp = requests.get(solveradd + '/message', params={'message': mess}).text
         if 'ERROR' not in resp:
-            problems[probid] = [cityname, problem, "PENDING3"]
+            problems[probid] = [cityname, problem, resp]
         else:
             problems[probid] = [cityname, problem, 'FAILED SOLVER']
     # Solver no encontrado
@@ -183,4 +183,4 @@ if __name__ == '__main__':
         diraddress = args.dir
 
     # Ponemos en marcha el servidor Flask
-    app.run(host=hostname, port=port, debug=False, use_reloader=False)
+    app.run(host=hostname, port=port, debug=True, use_reloader=False)
