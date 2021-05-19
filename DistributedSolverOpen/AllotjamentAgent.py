@@ -57,9 +57,9 @@ def message():
             # parametros mensaje SOLVE = "SOLVERADDRESS,PROBID,PROB"
             if messtype == 'SOLVE':
                 param = messparam.split(',')
-                if len(param) == 3:
-                    solveraddress, probid, prob = param
-                    p1 = Process(target=solver, args=(solveraddress, probid, prob))
+                if len(param) == 5:
+                    solveraddress, probid, start, end, destination = param
+                    p1 = Process(target=solver, args=(solveraddress, probid, start, end, destination))
                     p1.start()
                     return 'OK'
                 else:
@@ -75,18 +75,15 @@ def stop():
     return "Parando Servidor"
 
 
-def solver(saddress, probid, prob):
+def solver(saddress, probid, start, end, destination):
     """
     Hace la resolucion de un problema
 
     :param param:
     :return:
     """
-    #try:
-        #res = ''.join([x for x, _ in Counter(prob).most_common(10)])
-    #except Exception:
-        #res = 'ERROR: NON ASCII CHARACTERS'
-    res = ''
+
+    res = start + end + destination
     requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
 
 

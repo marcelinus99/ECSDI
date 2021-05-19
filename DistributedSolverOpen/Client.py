@@ -46,7 +46,7 @@ def message():
 
     # if request.form.has_key('message'):
     if 'message' in request.form:
-        send_message("REQALLOTJAMENT", "hola")
+        send_message("REQALLOTJAMENT", request.form['trip-start'], request.form['trip-end'], request.form['destination-city'])
         return redirect(url_for('.iface'))
     else:
         # Respuesta del solver SOLVED|PROBID,SOLUTION
@@ -79,10 +79,10 @@ def iface():
     """
     Interfaz con el cliente a traves de una pagina de web
     """
-    citylist = [ 'Almería', 'Badajoz', 'Barcelona', 'Bilbao', 'Burgos', 'Cáceres', 'Cádiz', 'Córdoba', 'Granada', 'Gerona',
+    citylist = ['Almería', 'Badajoz', 'Barcelona', 'Bilbao', 'Burgos', 'Cáceres', 'Cádiz', 'Córdoba', 'Granada', 'Gerona',
                  'Huelva', 'Huesca', 'Jaén', 'Las Palmas', 'León', 'Lleida', 'Madrid', 'Málaga', 'Murcia', 'Sevilla',
                  'Soria', 'Tarragona', 'Tenerife', 'Toledo', 'Valencia']
-    activity = [ 'Nada', 'Algo', 'Normal', 'Mucho']
+    activity = ['Nada', 'Algo', 'Normal', 'Mucho']
     return render_template('iface.html', cities=citylist, activitytype=activity)
 
 
@@ -95,7 +95,7 @@ def stop():
     return "Parando Servidor"
 
 
-def send_message(cityname, problem):
+def send_message(problem, start, end, destination):
     """
     Envia un request a un solver
 
@@ -124,25 +124,16 @@ def send_message(cityname, problem):
         # Le quitamos el OK de la respuesta
         solveradd = solveradd[4:]
 
-        problems[probid] = [cityname, problem, 'PENDING']
-        mess = f'SOLVE|{cityname},{clientadd},{probid},{sanitize(problem)}'
+        problems[probid] = [problem, start, end, destination, 'PENDING']
+        mess = f'SOLVE|{problem},{clientadd},{probid},{start},{end},{destination}'
         resp = requests.get(solveradd + '/message', params={'message': mess}).text
         if 'ERROR' not in resp:
-            problems[probid] = [cityname, problem, resp]
+            problems[probid] = [problem, start, end, destination, 'PENDING']
         else:
-            problems[probid] = [cityname, problem, 'FAILED SOLVER']
+            problems[probid] = [problem, start, end, destination, 'FAILED SOLVER']
     # Solver no encontrado
     else:
-        problems[probid] = (cityname, problem, 'FAILED DS')
-
-
-def sanitize(prob):
-    """
-    remove problematic punctuation signs from the string of the problem
-    :param prob:
-    :return:
-    """
-    return prob.replace(',', '*')
+        problems[probid] = (problem, start, end, destination, 'FAILED DS')
 
 
 if __name__ == '__main__':

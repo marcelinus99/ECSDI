@@ -76,21 +76,21 @@ def message():
             # parametros mensaje SOLVE = "PROBTYPE,CLIENTADDRESS,PROBID,PROB"
             if messtype == 'SOLVE':
                 param = messparam.split(',')
-                if len(param) == 4:
-                    probtype, clientaddress, probid, prob = param
-                    problems[probid] = [probtype, clientaddress, prob, 'PENDING']
+                if len(param) == 6:
+                    problem, clientaddress, probid, start, end, destination = param
+                    problems[probid] = [problem, clientaddress, probid, start, end, destination, 'PENDING']
                     # Buscamos el resolvedor del tipo adecuado y le mandamos el problema
-                    if probtype in ['ARITH', 'REQALLOTJAMENT']:
+                    if problem in ['REQALLOTJAMENT', 'REQTRANSPORT', 'REQACT']:
                         minionadd = requests.get(diraddress + '/message',
-                                                 params={'message': f'SEARCH|{probtype}'}).text
+                                                 params={'message': f'SEARCH|{problem}'}).text
                         if 'OK' in minionadd:
                             # Le quitamos el OK de la respuesta
                             minionadd = minionadd[4:]
 
-                            mens = 'SOLVE|%s,%s,%s' % (solveradd, probid, prob)
+                            mens = 'SOLVE|%s,%s,%s,%s,%s' % (solveradd, probid, start, end, destination)
                             requests.get(minionadd + '/message', params={'message': mens})
                         else:
-                            problems[probid][3] = 'FAILED SOLVER'
+                            problems[probid][6] = 'FAILED SOLVER'
                             return 'ERROR: NO SOLVERS AVAILABLE'
                     else:
                         return 'ERROR: UNKNOWN PROBLEM TYPE'
