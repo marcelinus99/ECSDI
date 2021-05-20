@@ -2,6 +2,12 @@
 <html>
 <head>
     <title>TravelPack</title>
+    <meta http-equiv="refresh" content="20">
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+        }
+    </style>
 </head>
 <body>
 
@@ -66,6 +72,52 @@
         </select>
 
         <p> <button type="submit" name="message" value='message'>Búscame un viaje</button> </p>
+
+        <h2><label>Alojamiento</label> </h2>
+        <table>
+            <tr>
+                <th>Fecha de inicio</th>
+                <th>Fecha de fin</th>
+                <th>Ciudad</th>
+                <th>Precio</th>
+                <th>Nombre del alojamiento</th>
+            </tr>
+            {% for id in probs|sort %}
+            {% if probs[id][0] == 'REQALLOTJAMENT' %}
+            <tr>
+                <td>{{probs[id][1]}}</td>
+                <td>{{probs[id][2]}}</td>
+                <td>{{probs[id][4]}}</td>
+                <td>{{probs[id][5]}}</td>
+                <td>{{probs[id][6]}}</td>
+             </tr>
+            {% endif %}
+            {% endfor %}
+
+        </table>
+
+        <h2><label>Transporte</label> </h2>
+        <table>
+            <tr>
+                <th>Fecha de salida</th>
+                <th>Fecha de regreso</th>
+                <th>Ciudad origen</th>
+                <th>Ciudad destino</th>
+                <th>Precio</th>
+            </tr>
+            {% for id in probs|sort %}
+            {% if probs[id][0] == 'REQTRANSPORT' %}
+            <tr>
+                <td>{{probs[id][1]}}</td>
+                <td>{{probs[id][2]}}</td>
+                <td>{{probs[id][3]}}</td>
+                <td>{{probs[id][4]}}</td>
+                <td>{{probs[id][5]}}</td>
+             </tr>
+            {% endif %}
+            {% endfor %}
+        </table>
+
     </form>
 </body>
 </html>

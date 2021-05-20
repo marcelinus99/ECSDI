@@ -1,10 +1,10 @@
 """
-.. module:: AllotjamentAgent
+.. module:: TransportAgent
 
-AllotjamentAgent
+TransportAgent
 *************
 
-:Description: Allotjament Agent
+:Description: Transport Agent
 
     Buscador de alojamientos para un paquete de viaje
 
@@ -19,15 +19,17 @@ AllotjamentAgent
 :Created on: 18/05/2021 17:06
 
 """
+
+from Util import gethostname
+import socket
 import argparse
 from FlaskServer import shutdown_server
 import requests
 from flask import Flask, request
 from requests import ConnectionError
 from multiprocessing import Process
-from Util import gethostname
+from collections import Counter
 import logging
-import socket
 
 __author__ = 'bejar'
 
@@ -58,9 +60,9 @@ def message():
             # parametros mensaje SOLVE = "SOLVERADDRESS,PROBID,PROB"
             if messtype == 'SOLVE':
                 param = messparam.split(',')
-                if len(param) == 3:
-                    solveraddress, probid, prob = param
-                    p1 = Process(target=solver, args=(solveraddress, probid, prob))
+                if len(param) == 6:
+                    solveraddress, probid, start, end, origin, destination = param
+                    p1 = Process(target=solver, args=(solveraddress, probid, start, end, origin, destination))
                     p1.start()
                     return 'OK'
                 else:
@@ -76,18 +78,15 @@ def stop():
     return "Parando Servidor"
 
 
-def solver(saddress, probid, prob):
+def solver(saddress, probid, start, end, origin, destination):
     """
     Hace la resolucion de un problema
 
     :param param:
     :return:
     """
-    try:
-        res = eval(prob)
-    except Exception:
-        res = 'ERROR: SYNTAX ERROR'
 
+    res = start + end + origin + destination
     requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
 
 
@@ -102,14 +101,13 @@ if __name__ == '__main__':
 
     # parsing de los parametros de la linea de comandos
     args = parser.parse_args()
-
     if not args.verbose:
         log = logging.getLogger('werkzeug')
         log.setLevel(logging.ERROR)
 
     # Configuration stuff
     if args.port is None:
-        port = 9020
+        port = 9030
     else:
         port = args.port
 
@@ -129,7 +127,7 @@ if __name__ == '__main__':
     # Registramos el solver aritmetico en el servicio de directorio
     solveradd = f'http://{hostaddr}:{port}'
     solverid = hostaddr.split('.')[0] + '-' + str(port)
-    mess = f'REGISTER|{solverid},ARITH,{solveradd}'
+    mess = f'REGISTER|{solverid},REQTRANSPORT,{solveradd}'
 
     done = False
     while not done:
@@ -140,7 +138,7 @@ if __name__ == '__main__':
             pass
 
     if 'OK' in resp:
-        print(f'ARITH {solverid} successfully registered')
+        print(f'REQTRANSPORT {solverid} successfully registered')
         # Ponemos en marcha el servidor Flask
         app.run(host=hostname, port=port, debug=True, use_reloader=False)
 

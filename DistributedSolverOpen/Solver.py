@@ -78,14 +78,13 @@ def message():
             # parametros mensaje SOLVE = "PROBTYPE,CLIENTADDRESS,PROBID,PROB"
             if messtype == 'SOLVE':
                 param = messparam.split(',')
-                if len(param) == 6:
-                    origin = ''
+                if len(param) == 7:
                     minp = ''
                     maxp = ''
                     ludic = ''
                     cultural = ''
                     party = ''
-                    problem, clientaddress, probid, start, end, destination = param
+                    problem, clientaddress, probid, start, end, origin, destination = param
                     problems[probid] = [problem, clientaddress, probid, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
                     # Buscamos el resolvedor del tipo adecuado y le mandamos el problema
                     if problem in ['REQALLOTJAMENT', 'REQTRANSPORT', 'REQACT']:
@@ -94,8 +93,11 @@ def message():
                         if 'OK' in minionadd:
                             # Le quitamos el OK de la respuesta
                             minionadd = minionadd[4:]
-
-                            mens = 'SOLVE|%s,%s,%s,%s,%s' % (solveradd, probid, start, end, destination)
+                            mens = ''
+                            if problem in ['REQTRANSPORT']:
+                                mens = 'SOLVE|%s,%s,%s,%s,%s,%s' % (solveradd, probid, start, end, origin, destination)
+                            elif problem in ['REQALLOTJAMENT']:
+                                mens = 'SOLVE|%s,%s,%s,%s,%s' % (solveradd, probid, start, end, destination)
                             requests.get(minionadd + '/message', params={'message': mens})
                         else:
                             problems[probid][6] = 'FAILED SOLVER'

@@ -51,7 +51,8 @@ def message():
 
     # if request.form.has_key('message'):
     if 'message' in request.form:
-        send_message("REQALLOTJAMENT", request.form['trip-start'], request.form['trip-end'], request.form['destination-city'])
+        send_message("REQALLOTJAMENT", request.form['trip-start'], request.form['trip-end'], '', request.form['destination-city'])
+        send_message("REQTRANSPORT", request.form['trip-start'], request.form['trip-end'], request.form['origin-city'], request.form['destination-city'])
         return redirect(url_for('.iface'))
     else:
         # Respuesta del solver SOLVED|PROBID,SOLUTION
@@ -63,9 +64,10 @@ def message():
                 if len(solution) == 2:
                     probid, sol = solution
                     if probid in problems:
-                        problems[probid][2] = sol
+                        problems[probid][10] = 'SOLVED'
                     else:  # Para el script de test de stress
                         problems[probid] = ['DUMMY', 'DUMMY', sol]
+
         return 'OK'
 
 
@@ -84,11 +86,13 @@ def iface():
     """
     Interfaz con el cliente a traves de una pagina de web
     """
+    global problems
+
     citylist = ['Almería', 'Badajoz', 'Barcelona', 'Bilbao', 'Burgos', 'Cáceres', 'Cádiz', 'Córdoba', 'Granada', 'Gerona',
                  'Huelva', 'Huesca', 'Jaén', 'Las Palmas', 'León', 'Lleida', 'Madrid', 'Málaga', 'Murcia', 'Sevilla',
                  'Soria', 'Tarragona', 'Tenerife', 'Toledo', 'Valencia']
     activity = ['Nada', 'Algo', 'Normal', 'Mucho']
-    return render_template('iface.html', cities=citylist, activitytype=activity)
+    return render_template('iface.html', cities=citylist, activitytype=activity, probs=problems)
 
 
 @app.route("/stop")
@@ -100,7 +104,7 @@ def stop():
     return "Parando Servidor"
 
 
-def send_message(problem, start, end, destination):
+def send_message(problem, start, end, origin, destination):
     """
     Envia un request a un solver
 
@@ -125,7 +129,6 @@ def send_message(problem, start, end, destination):
     # Busca un solver en el servicio de directorio
     solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
     # Solver encontrado
-    origin = ''
     minp = ''
     maxp = ''
     ludic = ''
@@ -136,7 +139,7 @@ def send_message(problem, start, end, destination):
         solveradd = solveradd[4:]
 
         problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
-        mess = f'SOLVE|{problem},{clientadd},{probid},{start},{end},{destination}'
+        mess = f'SOLVE|{problem},{clientadd},{probid},{start},{end},{origin},{destination}'
         resp = requests.get(solveradd + '/message', params={'message': mess}).text
         if 'ERROR' not in resp:
             problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']

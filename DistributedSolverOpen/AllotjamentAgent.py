@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
     # Configuration stuff
     if args.port is None:
-        port = 9030
+        port = 9020
     else:
         port = args.port
 
