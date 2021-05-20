@@ -114,7 +114,11 @@ Pasos:
   $ python Solver.py --port 9010 --dir http://DESKTOP-5IGN934:9000
 
   $ python AllotjamentAgent.py --port 9020 --dir http://pcera:9000
+  $ python AllotjamentAgent.py --port 9020 --dir http://DESKTOP-5IGN934:9000
+
+
   $ python TransportAgent.py --port 9030 --dir http://pcera:9000
+  $ python TransportAgent.py --port 9030 --dir http://DESKTOP-5IGN934:9000
 
  4- Iniciar Client y abrir en el navegador las paginas /iface y /info
 
