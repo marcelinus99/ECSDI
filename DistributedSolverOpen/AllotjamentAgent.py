@@ -1,22 +1,26 @@
 """
-.. module:: LetterCounter
+.. module:: AllotjamentAgent
 
-WordCounter
+AllotjamentAgent
 *************
 
-:Description: LetterCounter
+:Description: Allotjament Agent
 
-    Calcula la frecuencia de las letras de un string y retorna las 10 mas frecuentes
+    Buscador de alojamientos para un paquete de viaje
 
-:Authors: bejar
+:Authors:
+    Carles Llongueras Aparicio
+    Alexandre Fló Cuesta
+    Marc González Moratona
 
 
 :Version:
 
-:Created on: 06/02/2018 15:58
+:Created on: 18/05/2021 17:06
 
 """
 
+from APIs.amadeus_api import search_hotels
 from Util import gethostname
 import socket
 import argparse
@@ -25,15 +29,30 @@ import requests
 from flask import Flask, request
 from requests import ConnectionError
 from multiprocessing import Process
-from collections import Counter
 import logging
 
 __author__ = 'bejar'
+
+a = ''
 
 app = Flask(__name__)
 
 problems = {}
 probcounter = 0
+
+
+
+
+
+@app.route('/info')
+def info():
+    """
+    Entrada que da informacion sobre el agente a traves de una pagina web
+    """
+    return a
+
+
+
 
 
 @app.route("/message")
@@ -57,11 +76,11 @@ def message():
             # parametros mensaje SOLVE = "SOLVERADDRESS,PROBID,PROB"
             if messtype == 'SOLVE':
                 param = messparam.split(',')
-                if len(param) == 3:
-                    solveraddress, probid, prob = param
-                    p1 = Process(target=solver, args=(solveraddress, probid, prob))
+                if len(param) == 5:
+                    solveraddress, probid, start, end, destination = param
+                    p1 = Process(target=solver, args=(solveraddress, probid, start, end, destination))
                     p1.start()
-                    return 'OK'
+                    return '1234'
                 else:
                     return 'ERROR: WRONG PARAMETERS'
 
@@ -75,17 +94,17 @@ def stop():
     return "Parando Servidor"
 
 
-def solver(saddress, probid, prob):
+def solver(saddress, probid, start, end, destination):
     """
     Hace la resolucion de un problema
 
     :param param:
     :return:
     """
-    try:
-        res = ''.join([x for x, _ in Counter(prob).most_common(10)])
-    except Exception:
-        res = 'ERROR: NON ASCII CHARACTERS'
+    res = search_hotels()
+    global a
+    a = res
+    res = start + end + destination
     requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
 
 
@@ -106,7 +125,7 @@ if __name__ == '__main__':
 
     # Configuration stuff
     if args.port is None:
-        port = 9030
+        port = 9020
     else:
         port = args.port
 
@@ -126,7 +145,7 @@ if __name__ == '__main__':
     # Registramos el solver aritmetico en el servicio de directorio
     solveradd = f'http://{hostaddr}:{port}'
     solverid = hostaddr.split('.')[0] + '-' + str(port)
-    mess = f'REGISTER|{solverid},MFREQ,{solveradd}'
+    mess = f'REGISTER|{solverid},REQALLOTJAMENT,{solveradd}'
 
     done = False
     while not done:
@@ -137,9 +156,9 @@ if __name__ == '__main__':
             pass
 
     if 'OK' in resp:
-        print(f'FREQ {solverid} successfully registered')
+        print(f'REQALLOTJAMENT {solverid} successfully registered')
         # Ponemos en marcha el servidor Flask
-        app.run(host=hostname, port=port, debug=False, use_reloader=False)
+        app.run(host=hostname, port=port, debug=True, use_reloader=False)
 
         mess = f'UNREGISTER|{solverid}'
         requests.get(diraddress + '/message', params={'message': mess})

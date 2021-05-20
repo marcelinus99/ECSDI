@@ -16,20 +16,58 @@
 <p></p>
 Problems Solved = {{probs|length}}
 <p></p>
+<h2>Alojamientos</h2>
 <table>
     <tr>
         <th>Prob ID</th>
         <th>Prob Type</th>
-        <th>Prob</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Destination city</th>
+
+
         <th>Solution</th>
     </tr>
     {% for id in probs|sort %}
+    {% if probs[id][0] == 'REQALLOTJAMENT' %}
     <tr>
         <td>{{id}}</td>
         <td>{{probs[id][0]}}</td>
         <td>{{probs[id][1]}}</td>
         <td>{{probs[id][2]}}</td>
+        <td>{{probs[id][4]}}</td>
+        <td>{{probs[id][10]}}</td>
+
      </tr>
+    {% endif %}
+    {% endfor %}
+
+</table>
+<br><br>
+<h2>Transportes</h2>
+<table>
+    <tr>
+        <th>Prob ID</th>
+        <th>Prob Type</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Origin city</th>
+        <th>Destination city</th>
+        <th>Solution</th>
+    </tr>
+    {% for id in probs|sort %}
+    {% if probs[id][0] == 'REQTRANSPORT' %}
+    <tr>
+        <td>{{id}}</td>
+        <td>{{probs[id][0]}}</td>
+        <td>{{probs[id][1]}}</td>
+        <td>{{probs[id][2]}}</td>
+        <td>{{probs[id][3]}}</td>
+        <td>{{probs[id][4]}}</td>
+        <td>{{probs[id][10]}}</td>
+
+     </tr>
+    {% endif %}
     {% endfor %}
 </table>
 

@@ -8,12 +8,14 @@ Solver
 
     Solver generico que pasa los problemas a solvers especializados
 
-:Authors: bejar
-    
+:Authors:
+    Carles Llongueras Aparicio
+    Alexandre Fló Cuesta
+    Marc González Moratona
 
-:Version: 
+:Version:
 
-:Created on: 06/02/2018 8:20 
+:Created on: 18/05/2021 17:06
 
 """
 
@@ -64,6 +66,7 @@ def message():
     else:
         # Sintaxis de los mensajes "TIPO|PARAMETROS"
         mess = mess.split('|')
+
         if len(mess) != 2:
             return 'ERROR: INVALID MESSAGE'
         else:
@@ -75,28 +78,29 @@ def message():
             # parametros mensaje SOLVE = "PROBTYPE,CLIENTADDRESS,PROBID,PROB"
             if messtype == 'SOLVE':
                 param = messparam.split(',')
-                if len(param) == 4:
-                    probtype, clientaddress, probid, prob = param
-                    problems[probid] = [probtype, clientaddress, prob, 'PENDING']
+                if len(param) == 7:
+                    minp = ''
+                    maxp = ''
+                    ludic = ''
+                    cultural = ''
+                    party = ''
+                    problem, clientaddress, probid, start, end, origin, destination = param
+                    problems[probid] = [problem, clientaddress, probid, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
                     # Buscamos el resolvedor del tipo adecuado y le mandamos el problema
-                    if probtype in ['ARITH', 'MFREQ']:
+                    if problem in ['REQALLOTJAMENT', 'REQTRANSPORT', 'REQACT']:
                         minionadd = requests.get(diraddress + '/message',
-                                                 params={'message': f'SEARCH|{probtype}'}).text
+                                                 params={'message': f'SEARCH|{problem}'}).text
                         if 'OK' in minionadd:
                             # Le quitamos el OK de la respuesta
                             minionadd = minionadd[4:]
-                            mess = 'SOLVE|%s,%s,%s' % (solveradd, probid, prob)
-                            requests.get(minionadd + '/message', params={'message': mess})
-
-                            # Registramos la actividad en el logger si existe
-                            if logger is not None:
-                                try:
-                                    requests.get(logger + '/message', params={'message': f'{solverid},{probtype}'},
-                                                 timeout=5)
-                                except Exception:
-                                    pass
+                            mens = ''
+                            if problem in ['REQTRANSPORT']:
+                                mens = 'SOLVE|%s,%s,%s,%s,%s,%s' % (solveradd, probid, start, end, origin, destination)
+                            elif problem in ['REQALLOTJAMENT']:
+                                mens = 'SOLVE|%s,%s,%s,%s,%s' % (solveradd, probid, start, end, destination)
+                            requests.get(minionadd + '/message', params={'message': mens})
                         else:
-                            problems[probid][3] = 'FAILED SOLVER'
+                            problems[probid][6] = 'FAILED SOLVER'
                             return 'ERROR: NO SOLVERS AVAILABLE'
                     else:
                         return 'ERROR: UNKNOWN PROBLEM TYPE'
@@ -189,7 +193,7 @@ if __name__ == '__main__':
             logger = loggeradd[4:]
 
         # Ponemos en marcha el servidor Flask
-        app.run(host=hostname, port=port, debug=False, use_reloader=False)
+        app.run(host=hostname, port=port, debug=True, use_reloader=False)
 
         mess = f'UNREGISTER|{solverid}'
         requests.get(diraddress + '/message', params={'message': mess})

@@ -1,17 +1,22 @@
 """
-.. module:: UsuariAgent
+.. module:: Client
 
-UsuariAgent
+Client
 *************
 
-:Description: UsuariAgent
+:Description: Client
 
     Cliente del resolvedor distribuido
 
-:Authors: Marc González Moratona
-    
+:Authors:
+    Carles Llongueras Aparicio
+    Alexandre Fló Cuesta
+    Marc González Moratona
 
-:Version: 
+
+:Version:
+
+:Created on: 18/05/2021 17:06
 
 :Created on: 19/05/2021 10:27
 
@@ -46,7 +51,8 @@ def message():
 
     # if request.form.has_key('message'):
     if 'message' in request.form:
-        send_message("Barcelona", "hola")
+        send_message("REQALLOTJAMENT", request.form['trip-start'], request.form['trip-end'], '', request.form['destination-city'])
+        send_message("REQTRANSPORT", request.form['trip-start'], request.form['trip-end'], request.form['origin-city'], request.form['destination-city'])
         return redirect(url_for('.iface'))
     else:
         # Respuesta del solver SOLVED|PROBID,SOLUTION
@@ -58,9 +64,10 @@ def message():
                 if len(solution) == 2:
                     probid, sol = solution
                     if probid in problems:
-                        problems[probid][2] = sol
+                        problems[probid][10] = 'SOLVED'
                     else:  # Para el script de test de stress
                         problems[probid] = ['DUMMY', 'DUMMY', sol]
+
         return 'OK'
 
 
@@ -79,11 +86,13 @@ def iface():
     """
     Interfaz con el cliente a traves de una pagina de web
     """
-    citylist = [ 'Almería', 'Badajoz', 'Barcelona', 'Bilbao', 'Burgos', 'Cáceres', 'Cádiz', 'Córdoba', 'Granada', 'Gerona',
+    global problems
+
+    citylist = ['Almería', 'Badajoz', 'Barcelona', 'Bilbao', 'Burgos', 'Cáceres', 'Cádiz', 'Córdoba', 'Granada', 'Gerona',
                  'Huelva', 'Huesca', 'Jaén', 'Las Palmas', 'León', 'Lleida', 'Madrid', 'Málaga', 'Murcia', 'Sevilla',
                  'Soria', 'Tarragona', 'Tenerife', 'Toledo', 'Valencia']
-    activity = [ 'Nada', 'Algo', 'Normal', 'Mucho']
-    return render_template('iface.html', cities=citylist, activitytype=activity)
+    activity = ['Nada', 'Algo', 'Normal', 'Mucho']
+    return render_template('iface.html', cities=citylist, activitytype=activity, probs=problems)
 
 
 @app.route("/stop")
@@ -95,7 +104,7 @@ def stop():
     return "Parando Servidor"
 
 
-def send_message(cityname, problem):
+def send_message(problem, start, end, origin, destination):
     """
     Envia un request a un solver
 
@@ -117,32 +126,28 @@ def send_message(cityname, problem):
     probid = f'{clientid}-{probcounter:03}'
     probcounter += 1
 
-    # Busca un sotver en el servicio de directorio
+    # Busca un solver en el servicio de directorio
     solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
     # Solver encontrado
+    minp = ''
+    maxp = ''
+    ludic = ''
+    cultural = ''
+    party = ''
     if 'OK' in solveradd:
         # Le quitamos el OK de la respuesta
         solveradd = solveradd[4:]
 
-        problems[probid] = [cityname, problem, 'PENDING']
-        mess = f'SOLVE|{cityname},{clientadd},{probid},{sanitize(problem)}'
+        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
+        mess = f'SOLVE|{problem},{clientadd},{probid},{start},{end},{origin},{destination}'
         resp = requests.get(solveradd + '/message', params={'message': mess}).text
         if 'ERROR' not in resp:
-            problems[probid] = [cityname, problem, 'PENDING']
+            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
         else:
-            problems[probid] = [cityname, problem, 'FAILED SOLVER']
+            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED SOLVER']
     # Solver no encontrado
     else:
-        problems[probid] = (cityname, problem, 'FAILED DS')
-
-
-def sanitize(prob):
-    """
-    remove problematic punctuation signs from the string of the problem
-    :param prob:
-    :return:
-    """
-    return prob.replace(',', '*')
+        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED DS']
 
 
 if __name__ == '__main__':
@@ -183,4 +188,4 @@ if __name__ == '__main__':
         diraddress = args.dir
 
     # Ponemos en marcha el servidor Flask
-    app.run(host=hostname, port=port, debug=False, use_reloader=False)
+    app.run(host=hostname, port=port, debug=True, use_reloader=False)
