@@ -20,6 +20,7 @@ AllotjamentAgent
 
 """
 
+from APIs.amadeus_api import search_hotels
 from Util import gethostname
 import socket
 import argparse
@@ -28,15 +29,30 @@ import requests
 from flask import Flask, request
 from requests import ConnectionError
 from multiprocessing import Process
-from collections import Counter
 import logging
 
 __author__ = 'bejar'
+
+a = ''
 
 app = Flask(__name__)
 
 problems = {}
 probcounter = 0
+
+
+
+
+
+@app.route('/info')
+def info():
+    """
+    Entrada que da informacion sobre el agente a traves de una pagina web
+    """
+    return a
+
+
+
 
 
 @app.route("/message")
@@ -64,7 +80,7 @@ def message():
                     solveraddress, probid, start, end, destination = param
                     p1 = Process(target=solver, args=(solveraddress, probid, start, end, destination))
                     p1.start()
-                    return 'OK'
+                    return '1234'
                 else:
                     return 'ERROR: WRONG PARAMETERS'
 
@@ -85,7 +101,9 @@ def solver(saddress, probid, start, end, destination):
     :param param:
     :return:
     """
-
+    res = search_hotels()
+    global a
+    a = res
     res = start + end + destination
     requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
 
