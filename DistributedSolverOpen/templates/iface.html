@@ -1,170 +1,189 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>TravelPack</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="20">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-</head>
-<body>
-    <br>
-    <h1 style="padding-left: 20px"> TravelPack </h1>
-    <br>
-        <h5><label style="padding-left: 50px"> Indica cómo quieres que sean las actividades de tu viaje: </label> </h5>
-    <br>
-    <form action="/message" method="post">
-     <div class="row" style="padding-right: 150px">
-         <div class="col"> <label for="start" style="padding-left: 80px">Fecha de ida:</label> </div>
-        <div class="col"><input type="date" class="form-control" id="start" name="trip-start" value="2021-06-13" min="2021-01-01" max="2022-12-31"></div>
-     </div>
-        <br>
-     <div class="row" style="padding-right: 150px">
-        <div class="col"> <label for="end" style="padding-left: 80px"> Fecha de vuelta: </label></div>
-        <div class="col"> <input type="date" class="form-control" id="end" name="trip-end" value="2021-06-20" min="2021-01-01" max="2022-12-31"></div>
-      </div>
-        <br>
-     <div class="row" style="padding-right: 150px">
-        <div class="col"> <label for="origin-city" style="padding-left: 80px"> Ciudad de origen: </label> </div>
-        <div class="col">
-            <select class="form-select" id="origin-city" name="origin-city" method="GET" action="/">
-                {% for c in cities %}
-                    <option value={{c}}>{{c}}</option>
-                {% endfor %}
-            </select>
-        </div>
-      </div>
-        <br>
-    <div class="row" style="padding-right: 150px">
-         <div class="col"> <label for="destination-city" style="padding-left: 80px"> Ciudad de destino: </label> </div>
-        <div class="col">
-            <select class="form-select" id="destination-city" name="destination-city" method="GET" action="/">
-                {% for c in cities %}
-                <option value={{c}}>{{c}}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-        <br>
-        <h5><label style="padding-left: 50px">Indica cuánto quieres pagar por tu viaje:</label></h5>
-        <br>
-            <div class="price-slider">
-                <div class="row">
-                    <div class="col"> <label for="price-min" style="padding-left: 80px" >Precio mínimo:</label> </div>
-                    <div class="col"> <input name="price-min" id="price-min" type="number" style="margin-left: -80px" value="200" min="0" max="1000"/> </div>
-                </div>
-                <br>
-                <div class="row">
-                    <div class="col"><label for="price-max" style="padding-left: 80px">Precio máximo:</label></div>
-                    <div class="col"> <input type="number" id="price-max" name="price-max" style="margin-left: -80px" value="800" min="0" max="1000"/></div>
-                </div>
-            <br>
-        </div>
-        <br>
-        <h5><label style="padding-left: 50px"> Indica cómo quieres que sean las actividades de tu viaje: </label> </h5>
-        <br>
-        <div class="row" style="padding-right: 20px">
-            <div class="col"> <label for="ludic-activities" style="padding-left: 80px"> Lúdicas </label> </div>
-            <div class="col" style="margin-right: 150px">
-                <select class="form-select" id="ludic-activities" name="ludic-activities" method="GET" action="/">
-                    {% for t in activitytype %}
-                    <option value={{t}}>{{t}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <br>
-        <div class="row" style="padding-right: 20px">
-            <div class="col"> <label for="cultural-activities" style="padding-left: 80px"> Culturales </label> </div>
-            <div class="col" style="margin-right: 150px">
-            <select class="form-select" id="cultural-activities" name="cultural-activities" method="GET" action="/">
-                {% for t in activitytype %}
-                <option value={{t}}>{{t}}</option>
-                {% endfor %}
-            </select>
-            </div>
-        </div>
-        <br>
-         <div class="row" style="padding-right: 20px">
-             <div class="col"><label for="party-activities" style="padding-left: 80px"> Festivas </label></div>
-             <div class="col" style="margin-right: 150px">
-                 <select class="form-select" id="party-activities" name="party-activities" method="GET" action="/">
-                {% for t in activitytype %}
-                <option value={{t}}>{{t}}</option>
-                {% endfor %}
-            </select>
-             </div>
-         </div>
-        <br>
-        <br>
-        <button type="submit" class="btn btn-primary" ame="message" value='message' style="margin-left: 50px"> Búscame un viaje </button>
-        <br>
-        <br>
-        <br>
-        <br>
-        <div style="margin-left: 50px">
-            <h3><label>Alojamiento</label> </h3>
-        </div>
-        <br>
-        <div style="margin-left: 80px;margin-right: 80px">
-            <table class="table table-borderless">
-                <tr class="table-light" >
-                    <th>Fecha de inicio</th>
-                    <th>Fecha de fin</th>
-                    <th>Ciudad</th>
-                    <th>Precio</th>
-                    <th>Nombre del alojamiento</th>
-                </tr>
-                {% for id in probs|sort %}
-                {% if probs[id][0] == 'REQALLOTJAMENT' %}
-                <tr>
-                    <td>{{probs[id][1]}}</td>
-                    <td>{{probs[id][2]}}</td>
-                    <td>{{probs[id][4]}}</td>
-                    <td>{{probs[id][5]}}</td>
-                    <td>{{probs[id][6]}}</td>
-                 </tr>
-                {% endif %}
-                {% endfor %}
+	<head>
+		<title>TravelPack</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta http-equiv="refresh" content="20">
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+	</head>
+	<body>
+		<br>
+		<h1 style="padding-left: 20px"> TravelPack </h1>
+		<br>
+		<h5><label style="padding-left: 50px"> Indica las fechas y el destino de tu viaje: </label> </h5>
+		<br>
+		<form action="/message" method="post">
+			<div class="row" style="padding-right: 150px">
+				<div class="col"> <label for="start" style="padding-left: 80px">Fecha de ida:</label> </div>
+				<div class="col"><input type="date" class="form-control" id="start" name="trip-start" value="2021-06-13" min="2021-01-01" max="2022-12-31"></div>
+			</div>
+			<br>
+			<div class="row" style="padding-right: 150px">
+				<div class="col"> <label for="end" style="padding-left: 80px"> Fecha de vuelta: </label></div>
+				<div class="col"> <input type="date" class="form-control" id="end" name="trip-end" value="2021-06-20" min="2021-01-01" max="2022-12-31"></div>
+			</div>
+			<br>
+			<div class="row" style="padding-right: 150px">
+				<div class="col"> <label for="origin-city" style="padding-left: 80px"> Ciudad de origen: </label> </div>
+				<div class="col">
+					<select class="form-select" id="origin-city" name="origin-city" method="GET" action="/">
+						{% for c in cities %}
+						<option value={{c}}>{{c}}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+			<br>
+			<div class="row" style="padding-right: 150px">
+				<div class="col"> <label for="destination-city" style="padding-left: 80px"> Ciudad de destino: </label> </div>
+				<div class="col">
+					<select class="form-select" id="destination-city" name="destination-city" method="GET" action="/">
+						{% for c in cities %}
+						<option value={{c}}>{{c}}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+			<br>
+			<h5><label style="padding-left: 50px">Indica cuánto quieres pagar por tu viaje:</label></h5>
+			<br>
+			<div class="price-slider">
+				<div class="row">
+					<div class="col"> <label for="price-min" style="padding-left: 80px" >Precio mínimo:</label> </div>
+					<div class="col"> <input name="price-min" id="price-min" type="number" style="margin-left: -80px" value="200" min="0" max="1000"/> </div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col"><label for="price-max" style="padding-left: 80px">Precio máximo:</label></div>
+					<div class="col"> <input type="number" id="price-max" name="price-max" style="margin-left: -80px" value="800" min="0" max="1000"/></div>
+				</div>
+				<br>
+			</div>
+			<br>
+			<h5><label style="padding-left: 50px"> Indica cómo quieres que sean las actividades de tu viaje: </label> </h5>
+			<br>
+			<div class="row" style="padding-right: 20px">
+				<div class="col"> <label for="ludic-activities" style="padding-left: 80px"> Lúdicas </label> </div>
+				<div class="col" style="margin-right: 150px">
+					<select class="form-select" id="ludic-activities" name="ludic-activities" method="GET" action="/">
+						{% for t in activitytype %}
+						<option value={{t}}>{{t}}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+			<br>
+			<div class="row" style="padding-right: 20px">
+				<div class="col"> <label for="cultural-activities" style="padding-left: 80px"> Culturales </label> </div>
+				<div class="col" style="margin-right: 150px">
+					<select class="form-select" id="cultural-activities" name="cultural-activities" method="GET" action="/">
+						{% for t in activitytype %}
+						<option value={{t}}>{{t}}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+			<br>
+			<div class="row" style="padding-right: 20px">
+				<div class="col"><label for="party-activities" style="padding-left: 80px"> Festivas </label></div>
+				<div class="col" style="margin-right: 150px">
+					<select class="form-select" id="party-activities" name="party-activities" method="GET" action="/">
+						{% for t in activitytype %}
+						<option value={{t}}>{{t}}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+			<br>
+			<br>
+			<button type="submit" class="btn btn-primary" name="message" value='message' style="margin-left: 50px"> Búscame un viaje </button>
+		</form>
+		<br>
+		<br>
+		<div style="margin-left: 50px">
+			<h3><label>Alojamiento</label> </h3>
+		</div>
+		<br>
+		<div style="margin-left: 80px;margin-right: 80px">
+			<table class="table table-borderless">
+				<tr class="table-light" >
+					<th>Fecha de inicio</th>
+					<th>Fecha de fin</th>
+					<th>Ciudad</th>
+					<th>Precio</th>
+					<th>Nombre del alojamiento</th>
+				</tr>
+				{% for id in probs|sort %}
+				{% if probs[id][0] == 'REQALLOTJAMENT' %}
+				<tr>
+					<td>{{probs[id][1]}}</td>
+					<td>{{probs[id][2]}}</td>
+					<td>{{probs[id][4]}}</td>
+					<td>{{probs[id][5]}}</td>
+					<td>{{probs[id][6]}}</td>
+				</tr>
+				{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+		<br>
+		<br>
+		<br>
+		<div style="margin-left: 50px">
+			<h3><label>Transporte</label></h3>
+		</div>
+		<br>
+		<div style="margin-left: 80px;margin-right: 80px">
+			<table class="table table-borderless">
+				<tr class="table-light">
+					<th>Fecha de salida</th>
+					<th>Fecha de regreso</th>
+					<th>Ciudad origen</th>
+					<th>Ciudad destino</th>
+					<th>Precio</th>
+				</tr>
+				{% for id in probs|sort %}
+				{% if probs[id][0] == 'REQTRANSPORT' %}
+				<tr>
+					<td>{{probs[id][1]}}</td>
+					<td>{{probs[id][2]}}</td>
+					<td>{{probs[id][3]}}</td>
+					<td>{{probs[id][4]}}</td>
+					<td>{{probs[id][5]}}</td>
+				</tr>
+				{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+		<br>
+		<br>
+		<div style="margin-left: 50px">
+			<h3><label>Actividades</label></h3>
+		</div>
+		<br>
+		<div style="margin-left: 80px;margin-right: 80px">
+			<table class="table table-borderless">
+				<tr class="table-light">
+					<th>Fecha de la actividad</th>
+					<th>Hora de la actividad</th>
+					<th>Ciudad</th>
+					<th>Precio</th>
+				</tr>
+				{% for id in probs|sort %}
+				{% if probs[id][0] == 'REQTRANSPORT' %}
+				<tr>
+					<td></td>
+					<td></td>
+					<td>{{probs[id][4]}}</td>
+					<td></td>
+				</tr>
+				{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+		<br>
 
-            </table>
-        </div>
-            <br>
-        <br>
-        <br>
-
-        <div style="margin-left: 50px">
-            <h3><label>Transporte</label></h3>
-        </div>
-        <br>
-        <div style="margin-left: 80px;margin-right: 80px">
-
-            <table class="table table-borderless">
-                <tr class="table-light">
-                    <th>Fecha de salida</th>
-                    <th>Fecha de regreso</th>
-                    <th>Ciudad origen</th>
-                    <th>Ciudad destino</th>
-                    <th>Precio</th>
-                </tr>
-                {% for id in probs|sort %}
-                {% if probs[id][0] == 'REQTRANSPORT' %}
-                <tr>
-                    <td>{{probs[id][1]}}</td>
-                    <td>{{probs[id][2]}}</td>
-                    <td>{{probs[id][3]}}</td>
-                    <td>{{probs[id][4]}}</td>
-                    <td>{{probs[id][5]}}</td>
-                 </tr>
-                {% endif %}
-                {% endfor %}
-            </table>
-        </div>
-        <br>
-        <br>
-
-    </form>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
-</body>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+	</body>
 </html>
-

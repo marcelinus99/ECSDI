@@ -1,81 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Client Problems</title>
-<meta http-equiv="refresh" content="20">
-    <style type="text/css">
-        table, th, td {
-            border: 1px solid black;
-        }
-    </style>
-</head>
+<html>
+	<head>
+        <title>Client Problems</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta http-equiv="refresh" content="20">
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+	</head>
+	<body>
+		<br>
+		<h1 style="padding-left: 20px"> Problemas subidos a TravelPack </h1>
+		<br>
+		<div style="margin-left: 50px">
+			<h3><label>Información de los alojamientos</label> </h3>
+		</div>
+		<br>
+		<div style="margin-left: 80px;margin-right: 80px">
+			<table class="table table-borderless">
+				<tr class="table-light" >
+                    <th>Prob ID</th>
+                    <th>Prob Type</th>
+					<th>Fecha de inicio</th>
+					<th>Fecha de fin</th>
+					<th>Ciudad</th>
+					<th>Precio</th>
+					<th>Nombre del alojamiento</th>
+                    <th>Solution</th>
 
-<body>
+				</tr>
+				{% for id in probs|sort %}
+				{% if probs[id][0] == 'REQALLOTJAMENT' %}
+				<tr>
+                    <td>{{id}}</td>
+                    <td>{{probs[id][0]}}</td>
+					<td>{{probs[id][1]}}</td>
+					<td>{{probs[id][2]}}</td>
+					<td>{{probs[id][4]}}</td>
+					<td>{{probs[id][5]}}</td>
+					<td>{{probs[id][6]}}</td>
+                    <td>{{probs[id][10]}}</td>
+				</tr>
+				{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+		<br>
+        		<div style="margin-left: 50px">
+			<h3><label>Transporte</label></h3>
+		</div>
+		<br>
+		<div style="margin-left: 80px;margin-right: 80px">
+			<table class="table table-borderless">
+				<tr class="table-light">
+                    <th>Prob ID</th>
+                    <th>Prob Type</th>
+					<th>Fecha de salida</th>
+                    <th>Fecha de regreso</th>
+                    <th>Ciudad origen</th>
+                    <th>Ciudad destino</th>
+                    <th>Precio</th>
+                    <th>Solution</th>
+                </tr>
+				{% for id in probs|sort %}
+				{% if probs[id][0] == 'REQTRANSPORT' %}
+				<tr>
+                    <td>{{id}}</td>
+                    <td>{{probs[id][0]}}</td>
+					<td>{{probs[id][1]}}</td>
+					<td>{{probs[id][2]}}</td>
+					<td>{{probs[id][3]}}</td>
+					<td>{{probs[id][4]}}</td>
+					<td>{{probs[id][5]}}</td>
+                    <td>{{probs[id][10]}}</td>
 
-<h1> Posted problems</h1>
-<p></p>
-Problems Solved = {{probs|length}}
-<p></p>
-<h2>Alojamientos</h2>
-<table>
-    <tr>
-        <th>Prob ID</th>
-        <th>Prob Type</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Destination city</th>
-
-
-        <th>Solution</th>
-    </tr>
-    {% for id in probs|sort %}
-    {% if probs[id][0] == 'REQALLOTJAMENT' %}
-    <tr>
-        <td>{{id}}</td>
-        <td>{{probs[id][0]}}</td>
-        <td>{{probs[id][1]}}</td>
-        <td>{{probs[id][2]}}</td>
-        <td>{{probs[id][4]}}</td>
-        <td>{{probs[id][10]}}</td>
-
-     </tr>
-    {% endif %}
-    {% endfor %}
-
-</table>
-<br><br>
-<h2>Transportes</h2>
-<table>
-    <tr>
-        <th>Prob ID</th>
-        <th>Prob Type</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Origin city</th>
-        <th>Destination city</th>
-        <th>Solution</th>
-    </tr>
-    {% for id in probs|sort %}
-    {% if probs[id][0] == 'REQTRANSPORT' %}
-    <tr>
-        <td>{{id}}</td>
-        <td>{{probs[id][0]}}</td>
-        <td>{{probs[id][1]}}</td>
-        <td>{{probs[id][2]}}</td>
-        <td>{{probs[id][3]}}</td>
-        <td>{{probs[id][4]}}</td>
-        <td>{{probs[id][10]}}</td>
-
-     </tr>
-    {% endif %}
-    {% endfor %}
-</table>
-
-<form  action="/info" method="get">
-    <p>
-        <button type="submit">Refresh</button>
-    </p>
-</form>
-
-</body>
+				</tr>
+				{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+        <br>
+        <form  action="/info" method="get">
+            <p>
+                <button type="submit" class="btn btn-primary"  style="margin-left: 50px">Refresh</button>
+            </p>
+        </form>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+	</body>
 </html>

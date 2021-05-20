@@ -19,6 +19,7 @@ AllotjamentAgent
 :Created on: 18/05/2021 17:06
 
 """
+from uuid import uuid4
 
 from APIs.amadeus_api import search_hotels
 from Util import gethostname
@@ -26,7 +27,7 @@ import socket
 import argparse
 from FlaskServer import shutdown_server
 import requests
-from flask import Flask, request
+from flask import Flask, request, render_template
 from requests import ConnectionError
 from multiprocessing import Process
 import logging
@@ -41,7 +42,16 @@ problems = {}
 probcounter = 0
 
 
+def obscure(dir):
+    """
+    Hide real hostnames
+    """
+    odir = {}
+    for d in dir:
+        _, _, port = dir[d][1].split(':')
+        odir[d] = (dir[d][0], f'{uuid4()}:{port}', dir[d][2], dir[d][3])
 
+    return odir
 
 
 @app.route('/info')
@@ -50,10 +60,6 @@ def info():
     Entrada que da informacion sobre el agente a traves de una pagina web
     """
     return a
-
-
-
-
 
 @app.route("/message")
 def message():
