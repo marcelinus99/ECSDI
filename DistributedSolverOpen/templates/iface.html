@@ -49,23 +49,23 @@
 			<h5><label style="padding-left: 50px">Indica cuánto quieres pagar por tu viaje:</label></h5>
 			<br>
 			<div class="price-slider">
-				<div class="row">
+				<div class="row" style="padding-right: 150px">
 					<div class="col"> <label for="price-min" style="padding-left: 80px" >Precio mínimo:</label> </div>
-					<div class="col"> <input name="price-min" id="price-min" type="number" style="margin-left: -80px" value="200" min="0" max="1000"/> </div>
+					<div class="col"> <input class="form-control" name="price-min" id="price-min" type="number" value="200" min="0" max="1000"/> </div>
 				</div>
 				<br>
-				<div class="row">
+				<div class="row" style="padding-right: 150px">
 					<div class="col"><label for="price-max" style="padding-left: 80px">Precio máximo:</label></div>
-					<div class="col"> <input type="number" id="price-max" name="price-max" style="margin-left: -80px" value="800" min="0" max="1000"/></div>
+					<div class="col"> <input type="number" class="form-control" id="price-max" name="price-max" value="800" min="0" max="1000"/></div>
 				</div>
 				<br>
 			</div>
 			<br>
 			<h5><label style="padding-left: 50px"> Indica cómo quieres que sean las actividades de tu viaje: </label> </h5>
 			<br>
-			<div class="row" style="padding-right: 20px">
+			<div class="row" style="padding-right: 150px">
 				<div class="col"> <label for="ludic-activities" style="padding-left: 80px"> Lúdicas </label> </div>
-				<div class="col" style="margin-right: 150px">
+				<div class="col">
 					<select class="form-select" id="ludic-activities" name="ludic-activities" method="GET" action="/">
 						{% for t in activitytype %}
 						<option value={{t}}>{{t}}</option>
@@ -74,9 +74,9 @@
 				</div>
 			</div>
 			<br>
-			<div class="row" style="padding-right: 20px">
+			<div class="row" style="padding-right: 150px">
 				<div class="col"> <label for="cultural-activities" style="padding-left: 80px"> Culturales </label> </div>
-				<div class="col" style="margin-right: 150px">
+				<div class="col">
 					<select class="form-select" id="cultural-activities" name="cultural-activities" method="GET" action="/">
 						{% for t in activitytype %}
 						<option value={{t}}>{{t}}</option>
@@ -85,9 +85,9 @@
 				</div>
 			</div>
 			<br>
-			<div class="row" style="padding-right: 20px">
+			<div class="row" style="padding-right: 150px">
 				<div class="col"><label for="party-activities" style="padding-left: 80px"> Festivas </label></div>
-				<div class="col" style="margin-right: 150px">
+				<div class="col">
 					<select class="form-select" id="party-activities" name="party-activities" method="GET" action="/">
 						{% for t in activitytype %}
 						<option value={{t}}>{{t}}</option>
