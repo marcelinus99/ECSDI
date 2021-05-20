@@ -19,7 +19,7 @@ TransportAgent
 :Created on: 18/05/2021 17:06
 
 """
-from APIs.amadeus_api import search_vuelos
+from amadeus_api import search_vuelos
 from Util import gethostname
 import socket
 import argparse
@@ -28,7 +28,6 @@ import requests
 from flask import Flask, request
 from requests import ConnectionError
 from multiprocessing import Process
-from collections import Counter
 import logging
 
 __author__ = 'bejar'
@@ -86,7 +85,8 @@ def solver(saddress, probid, start, end, origin, destination):
     :return:
     """
     res = search_vuelos(start, end, origin, destination)
-    requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
+    print(res[0])
+    requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res[0]}'})
 
 
 if __name__ == '__main__':

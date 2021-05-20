@@ -123,8 +123,8 @@
 					<td>{{probs[id][1]}}</td>
 					<td>{{probs[id][2]}}</td>
 					<td>{{probs[id][4]}}</td>
-					<td>{{probs[id][5]}}</td>
-					<td>{{probs[id][6]}}</td>
+					<td>{{probs[id][12]}}</td>
+					<td>{{probs[id][11]}}</td>
 				</tr>
 				{% endif %}
 				{% endfor %}
@@ -144,7 +144,9 @@
 					<th>Fecha de regreso</th>
 					<th>Ciudad origen</th>
 					<th>Ciudad destino</th>
+					<th>Aeropuerto</th>
 					<th>Precio</th>
+
 				</tr>
 				{% for id in probs|sort %}
 				{% if probs[id][0] == 'REQTRANSPORT' %}
@@ -153,7 +155,8 @@
 					<td>{{probs[id][2]}}</td>
 					<td>{{probs[id][3]}}</td>
 					<td>{{probs[id][4]}}</td>
-					<td>{{probs[id][5]}}</td>
+					<td>{{probs[id][13]}}</td>
+					<td>{{probs[id][14]}}</td>
 				</tr>
 				{% endif %}
 				{% endfor %}

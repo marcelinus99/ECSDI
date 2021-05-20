@@ -111,6 +111,7 @@ def message():
                 solution = messparam.split(',')
                 if len(solution) == 2:
                     probid, sol = solution
+                    print(sol)
                     if probid in problems:
                         problems[probid][3] = 'SOLVED'
                         resp = requests.get(problems[probid][1] + '/message',

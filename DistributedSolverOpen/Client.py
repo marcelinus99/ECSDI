@@ -63,7 +63,17 @@ def message():
                 solution = messparam.split(',')
                 if len(solution) == 2:
                     probid, sol = solution
+                    print(sol)
                     if probid in problems:
+                        if problems[probid][0] in ['REQALLOTJAMENT']:
+                            a = sol.split(':')
+                            problems[probid][11] = a[0]
+                            problems[probid][12] = a[1]
+                        elif problems[probid][0] in ['REQTRANSPORT']:
+                            a = sol.split('/')
+                            problems[probid][13] = a[0]
+                            problems[probid][14] = a[1]
+
                         problems[probid][10] = 'SOLVED'
                     else:  # Para el script de test de stress
                         problems[probid] = ['DUMMY', 'DUMMY', sol]
@@ -132,20 +142,24 @@ def send_message(problem, start, end, origin, destination):
     ludic = ''
     cultural = ''
     party = ''
+    priceHot = ''
+    nameHot = ''
+    priceTrans = ''
+    aerop = ''
     if 'OK' in solveradd:
         # Le quitamos el OK de la respuesta
         solveradd = solveradd[4:]
 
-        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
+        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING', priceHot, nameHot, priceTrans, aerop]
         mess = f'SOLVE|{problem},{clientadd},{probid},{start},{end},{origin},{destination}'
         resp = requests.get(solveradd + '/message', params={'message': mess}).text
         if 'ERROR' not in resp:
-            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
+            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING', priceHot, nameHot, priceTrans, aerop]
         else:
-            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED SOLVER']
+            problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED SOLVER', priceHot, nameHot, priceTrans, aerop]
     # Solver no encontrado
     else:
-        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED DS']
+        problems[probid] = [problem, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'FAILED DS', priceHot, nameHot]
 
 
 if __name__ == '__main__':

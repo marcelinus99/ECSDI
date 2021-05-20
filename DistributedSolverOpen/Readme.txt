@@ -100,34 +100,28 @@ Pasos:
 
  1- Iniciar un DirectoryService y abrir el navegador en la pagina /info del agente (pcera:9000/info)
 
-  $ python DirectoryService.py --port 9000
-
- 2- Iniciar un Logger y esperar a que se registre y abrir el navegador en la pagina /info del agente
-
-  $ python Logger.py --port 9040 --dir http://pcera:9000
-  $ python Logger.py --port 9040 --dir http://DESKTOP-5IGN934:9000
-  $ python Logger.py --port 9040 --dir http://DESKTOP-53V8IFQ:9000
+  python DirectoryService.py --port 9000
 
  3- Iniciar una o mas copias de Solver, Arithmetic y LetterCounter (los agentes Solver tambien tienen una pagina /info
      que se puede monitorizar)
 
   $ python Solver.py --port 9010 --dir http://pcera:9000
-  $ python Solver.py --port 9010 --dir http://DESKTOP-5IGN934:9000
+   python Solver.py --port 9010 --dir http://DESKTOP-5IGN934:9000
   $ python Solver.py --port 9010 --dir http://DESKTOP-53V8IFQ:9000
 
   $ python AllotjamentAgent.py --port 9020 --dir http://pcera:9000
-  $ python AllotjamentAgent.py --port 9020 --dir http://DESKTOP-5IGN934:9000
+   python AllotjamentAgent.py --port 9020 --dir http://DESKTOP-5IGN934:9000
   $ python AllotjamentAgent.py --port 9020 --dir http://DESKTOP-53V8IFQ:9000
 
 
   $ python TransportAgent.py --port 9030 --dir http://pcera:9000
-  $ python TransportAgent.py --port 9030 --dir http://DESKTOP-5IGN934:9000
+   python TransportAgent.py --port 9030 --dir http://DESKTOP-5IGN934:9000
   $ python TransportAgent.py --port 9030 --dir http://DESKTOP-53V8IFQ:9000
 
  4- Iniciar Client y abrir en el navegador las paginas /iface y /info
 
   $ python Client.py --port 9001 --dir http://pcera:9000
-  $ python Client.py --port 9001 --dir http://DESKTOP-5IGN934:9000
+   python Client.py --port 9001 --dir http://DESKTOP-5IGN934:9000
   $ python Client.py --port 9001 --dir http://DESKTOP-53V8IFQ:9000
 
  5- Ejecutar problemas desde la pagina /iface del cliente

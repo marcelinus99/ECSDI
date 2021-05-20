@@ -21,7 +21,7 @@ AllotjamentAgent
 """
 from uuid import uuid4
 
-from APIs.amadeus_api import search_hotels
+from amadeus_api import search_hotels
 from Util import gethostname
 import socket
 import argparse
@@ -86,7 +86,7 @@ def message():
                     solveraddress, probid, start, end, destination = param
                     p1 = Process(target=solver, args=(solveraddress, probid, start, end, destination))
                     p1.start()
-                    return '1234'
+                    return 'oliwis'
                 else:
                     return 'ERROR: WRONG PARAMETERS'
 
@@ -109,7 +109,15 @@ def solver(saddress, probid, start, end, destination):
     """
     res = search_hotels(destination)
     print(res)
-    requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
+    values_view = res.values()
+    value_iterator = iter(values_view)
+    first_value = next(value_iterator)
+
+    keys_view = res.keys()
+    value_iterator = iter(keys_view)
+    first_key = next(value_iterator)
+
+    requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{first_key + ":" + first_value}'})
 
 
 if __name__ == '__main__':
