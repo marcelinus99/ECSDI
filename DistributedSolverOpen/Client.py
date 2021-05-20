@@ -88,9 +88,7 @@ def iface():
     """
     global problems
 
-    citylist = ['Almería', 'Badajoz', 'Barcelona', 'Bilbao', 'Burgos', 'Cáceres', 'Cádiz', 'Córdoba', 'Granada', 'Gerona',
-                 'Huelva', 'Huesca', 'Jaén', 'Las Palmas', 'León', 'Lleida', 'Madrid', 'Málaga', 'Murcia', 'Sevilla',
-                 'Soria', 'Tarragona', 'Tenerife', 'Toledo', 'Valencia']
+    citylist = ['Barcelona', 'Madrid', 'Paris', 'Milan', 'Londres', 'Munich', 'NuevaYork', 'Berlin']
     activity = ['Nada', 'Algo', 'Normal', 'Mucho']
     return render_template('iface.html', cities=citylist, activitytype=activity, probs=problems)
 

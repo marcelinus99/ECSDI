@@ -19,7 +19,7 @@ TransportAgent
 :Created on: 18/05/2021 17:06
 
 """
-
+from APIs.amadeus_api import search_vuelos
 from Util import gethostname
 import socket
 import argparse
@@ -85,8 +85,7 @@ def solver(saddress, probid, start, end, origin, destination):
     :param param:
     :return:
     """
-
-    res = start + end + origin + destination
+    res = search_vuelos(start, end, origin, destination)
     requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
 
 
