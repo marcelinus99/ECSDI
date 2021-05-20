@@ -107,10 +107,8 @@ def solver(saddress, probid, start, end, destination):
     :param param:
     :return:
     """
-    res = search_hotels()
-    global a
-    a = res
-    res = start + end + destination
+    res = search_hotels(destination)
+    print(res)
     requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
 
 
