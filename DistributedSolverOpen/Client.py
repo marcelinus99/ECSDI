@@ -119,7 +119,6 @@ def send_message(cityname, problem):
 
     # Busca un sotver en el servicio de directorio
     solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
-    solveradd = requests.get(diraddress + '/message', params={'message': f'SEARCH|SOLVER'}).text
     # Solver encontrado
     if 'OK' in solveradd:
         # Le quitamos el OK de la respuesta
