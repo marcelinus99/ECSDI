@@ -19,17 +19,92 @@ Solver
 
 """
 
+from multiprocessing import Process
 from Util import gethostname
 import socket
 import argparse
+from rdflib.namespace import FOAF, RDF
+from AgentUtil.ACL import ACL
+from AgentUtil.DSO import DSO
+from AgentUtil.ACLMessages import build_message, send_message
+
 from FlaskServer import shutdown_server
-import requests
-from flask import Flask, request, render_template
-from requests import ConnectionError
+from flask import Flask, render_template
 from uuid import uuid4
 import logging
+from AgentUtil.Logging import config_logger
 
-__author__ = 'bejar'
+from AgentUtil.Agent import Agent
+from rdflib import Graph, Namespace
+
+__author__ = 'Alexandre Fló Cuesta', 'Marc González Moratona', 'Carles Llongueras Aparicio'
+
+# Definimos los parametros de la linea de comandos
+parser = argparse.ArgumentParser()
+parser.add_argument('--open', help="Define si el servidor esta abierto al exterior o no", action='store_true',
+                    default=False)
+parser.add_argument('--verbose', help="Genera un log de la comunicacion del servidor web", action='store_true',
+                    default=False)
+parser.add_argument('--port', type=int, help="Puerto de comunicacion del agente")
+parser.add_argument('--dhost', help="Host del agente de directorio")
+parser.add_argument('--dport', type=int, help="Puerto de comunicacion del agente de directorio")
+
+# parsing de los parametros de la linea de comandos
+args = parser.parse_args()
+if not args.verbose:
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+
+# Configuration stuff
+if args.port is None:
+    port = 9010
+else:
+    port = args.port
+
+if args.dport is None:
+    dport = 9000
+else:
+    dport = args.dport
+
+if args.open:
+    hostname = '0.0.0.0'
+    hostaddr = gethostname()
+else:
+    hostaddr = hostname = '127.0.0.1'
+
+if args.dhost is None:
+    dhostname = gethostname()
+else:
+    dhostname = args.dhost
+
+# Configuration constants and variables
+agn = Namespace("http://www.agentes.org#")
+
+# Contador de mensajes
+mss_cnt = 0
+
+# Datos del Agente
+Solver = Agent('SolverAgent',
+                       agn.Solver,
+                       'http://%s:%d/comm' % (hostaddr, port),
+                       'http://%s:%d/stop' % (hostaddr, port))
+
+# Directory agent address
+DirectoryService = Agent('ServiceAgent',
+                       agn.DirectoryService,
+                       'http://%s:%d/register' % (dhostname, dport),
+                       'http://%s:%d/stop' % (dhostname, dport))
+
+# Global dsgraph triplestore
+dsgraph = Graph()
+
+
+app = Flask(__name__)
+
+problems = {}
+
+# Logging
+logger = config_logger(level=1)
 
 
 def obscure(dir):
@@ -44,83 +119,6 @@ def obscure(dir):
     return odir
 
 
-app = Flask(__name__)
-
-problems = {}
-logger = None
-
-
-@app.route("/message")
-def message():
-    """
-    Entrypoint para todas las comunicaciones
-
-    :return:
-    """
-    global problems
-
-    mess = request.args['message']
-
-    if '|' not in mess:
-        return 'ERROR: INVALID MESSAGE'
-    else:
-        # Sintaxis de los mensajes "TIPO|PARAMETROS"
-        mess = mess.split('|')
-
-        if len(mess) != 2:
-            return 'ERROR: INVALID MESSAGE'
-        else:
-            messtype, messparam = mess
-
-        if messtype not in ['SOLVE', 'SOLVED']:
-            return 'ERROR: INVALID REQUEST'
-        else:
-            # parametros mensaje SOLVE = "PROBTYPE,CLIENTADDRESS,PROBID,PROB"
-            if messtype == 'SOLVE':
-                param = messparam.split(',')
-                if len(param) == 7:
-                    minp = ''
-                    maxp = ''
-                    ludic = ''
-                    cultural = ''
-                    party = ''
-                    problem, clientaddress, probid, start, end, origin, destination = param
-                    problems[probid] = [problem, clientaddress, probid, start, end, origin, destination, minp, maxp, ludic, cultural, party, 'PENDING']
-                    # Buscamos el resolvedor del tipo adecuado y le mandamos el problema
-                    if problem in ['REQALLOTJAMENT', 'REQTRANSPORT', 'REQACT']:
-                        minionadd = requests.get(diraddress + '/message',
-                                                 params={'message': f'SEARCH|{problem}'}).text
-                        if 'OK' in minionadd:
-                            # Le quitamos el OK de la respuesta
-                            minionadd = minionadd[4:]
-                            mens = ''
-                            if problem in ['REQTRANSPORT']:
-                                mens = 'SOLVE|%s,%s,%s,%s,%s,%s' % (solveradd, probid, start, end, origin, destination)
-                            elif problem in ['REQALLOTJAMENT']:
-                                mens = 'SOLVE|%s,%s,%s,%s,%s' % (solveradd, probid, start, end, destination)
-                            requests.get(minionadd + '/message', params={'message': mens})
-                        else:
-                            problems[probid][6] = 'FAILED SOLVER'
-                            return 'ERROR: NO SOLVERS AVAILABLE'
-                    else:
-                        return 'ERROR: UNKNOWN PROBLEM TYPE'
-                else:
-                    return 'ERROR: WRONG PARAMETERS'
-            # respuesta del solver con una solucion
-            elif messtype == 'SOLVED':
-                solution = messparam.split(',')
-                if len(solution) == 2:
-                    probid, sol = solution
-                    print(sol)
-                    if probid in problems:
-                        problems[probid][3] = 'SOLVED'
-                        resp = requests.get(problems[probid][1] + '/message',
-                                            params={'message': f'SOLVED|{probid},{sol}'}).text
-                    return 'OK'
-                return 'OK'
-    return ''
-
-
 @app.route('/info')
 def info():
     """
@@ -131,72 +129,119 @@ def info():
     return render_template('solverproblems.html', probs=obscure(problems))
 
 
+def tidyup():
+    """
+    Acciones previas a parar el agente
+
+    """
+    pass
+
+
 @app.route("/stop")
 def stop():
     """
-    Entrada que para el agente
+    Entrypoint que para el agente
+
+    :return:
     """
+    tidyup()
     shutdown_server()
     return "Parando Servidor"
 
 
+def directory_search_message(type):
+    """
+    Busca en el servicio de registro mandando un
+    mensaje de request con una accion Seach del servicio de directorio
+
+    Podria ser mas adecuado mandar un query-ref y una descripcion de registo
+    con variables
+
+    :param type:
+    :return:
+    """
+    global mss_cnt
+    # logger.info('Buscamos en el servicio de registro')
+
+    gmess = Graph()
+
+    gmess.bind('foaf', FOAF)
+    gmess.bind('dso', DSO)
+    reg_obj = agn[Solver.name + '-search']
+    gmess.add((reg_obj, RDF.type, DSO.Search))
+    gmess.add((reg_obj, DSO.AgentType, type))
+
+    msg = build_message(gmess, perf=ACL.request,
+                        sender=Solver.uri,
+                        receiver=DirectoryService.uri,
+                        content=reg_obj,
+                        msgcnt=mss_cnt)
+    gr = send_message(msg, DirectoryService.address)
+    mss_cnt += 1
+    # logger.info('Recibimos informacion del agente')
+
+    return gr
+
+
+def buscarAllotjament():
+    """
+    Un comportamiento del agente
+
+    :return:
+    """
+
+    # Buscamos en el directorio
+    # un agente de hoteles
+    gr = directory_search_message(DSO.HotelsAgent)
+
+    # Obtenemos la direccion del agente de la respuesta
+    # No hacemos ninguna comprobacion sobre si es un mensaje valido
+    msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
+    content = gr.value(subject=msg, predicate=ACL.content)
+    ragn_addr = gr.value(subject=content, predicate=DSO.Address)
+    ragn_uri = gr.value(subject=content, predicate=DSO.Uri)
+
+    # Ahora mandamos un objeto de tipo request mandando una accion de tipo Search
+    # que esta en una supuesta ontologia de acciones de agentes
+    infoagent_search_message(ragn_addr, ragn_uri)
+
+
+def infoagent_search_message(addr, ragn_uri):
+    """
+    Envia una accion a un agente de informacion
+    """
+    global mss_cnt
+    # logger.info('Hacemos una peticion al servicio de informacion')
+
+    gmess = Graph()
+
+    # Supuesta ontologia de acciones de agentes de informacion
+    IAA = Namespace('IAActions')
+
+    gmess.bind('foaf', FOAF)
+    gmess.bind('iaa', IAA)
+    reg_obj = agn[Solver.name + '-info-search']
+    gmess.add((reg_obj, RDF.type, IAA.Search))
+
+    msg = build_message(gmess, perf=ACL.request,
+                        sender=Solver.uri,
+                        receiver=ragn_uri,
+                        msgcnt=mss_cnt)
+    gr = send_message(msg, addr)
+    mss_cnt += 1
+    # logger.info('Recibimos respuesta a la peticion al servicio de informacion')
+
+    return gr
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--open', help="Define si el servidor esta abierto al exterior o no", action='store_true',
-                        default=False)
-    parser.add_argument('--verbose', help="Genera un log de la comunicacion del servidor web", action='store_true',
-                        default=False)
-    parser.add_argument('--port', type=int, help="Puerto de comunicacion del agente")
-    parser.add_argument('--dir', default=None, help="Direccion del servicio de directorio")
+    # Ponemos en marcha los behaviors
+    ab1 = Process(target=buscarAllotjament)
+    ab1.start()
 
-    # parsing de los parametros de la linea de comandos
-    args = parser.parse_args()
-    if not args.verbose:
-        log = logging.getLogger('werkzeug')
-        log.setLevel(logging.ERROR)
+    # Ponemos en marcha el servidor Flask
+    app.run(host=hostname, port=port, debug=True, use_reloader=False)
 
-    # Configuration stuff
-    if args.port is None:
-        port = 9010
-    else:
-        port = args.port
+    # Esperamos a que acaben los behaviors
+    ab1.join()
 
-    if args.open:
-        hostname = '0.0.0.0'
-        hostaddr = gethostname()
-    else:
-        hostaddr = hostname = socket.gethostname()
-
-    if args.dir is None:
-        raise NameError('A Directory Service addess is needed')
-    else:
-        diraddress = args.dir
-
-    # Registramos el solver en el servicio de directorio
-    solveradd = f'http://{hostaddr}:{port}'
-    solverid = hostaddr.split('.')[0] + '-' + str(port)
-    mess = f'REGISTER|{solverid},SOLVER,{solveradd}'
-
-    done = False
-    while not done:
-        try:
-            resp = requests.get(diraddress + '/message', params={'message': mess}).text
-            done = True
-        except ConnectionError:
-            pass
-    print('DS Hostname =', hostaddr)
-
-    if 'OK' in resp:
-        print(f'SOLVER {solverid} successfully registered')
-        # Buscamos el logger si existe en el registro
-        loggeradd = requests.get(diraddress + '/message', params={'message': 'SEARCH|LOGGER'}).text
-        if 'OK' in loggeradd:
-            logger = loggeradd[4:]
-
-        # Ponemos en marcha el servidor Flask
-        app.run(host=hostname, port=port, debug=True, use_reloader=False)
-
-        mess = f'UNREGISTER|{solverid}'
-        requests.get(diraddress + '/message', params={'message': mess})
-    else:
-        print('Unable to register')

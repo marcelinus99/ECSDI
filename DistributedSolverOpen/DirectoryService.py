@@ -9,27 +9,95 @@ DirectoryService
  Registra los agentes/servicios activos y reparte la carga de las busquedas mediante
  un round robin
 
-:Authors: bejar
-    
+:Authors:
+Alexandre Fló Cuesta
+Marc González Moratona
+Carles Llongueras Aparicio
 
-:Version: 
 
-:Created on: 06/02/2018 8:20 
+:Version:
+
+:Created on: 18/05/2021 17:02
 
 """
+from AgentUtil.ACL import ACL
+from rdflib.namespace import FOAF
+from multiprocessing import Process, Queue
+
+from DistributedSolverOpen.AgentUtil.ACLMessages import build_message, get_message_properties
 from Util import gethostname
 import socket
 import argparse
 from FlaskServer import shutdown_server
+from rdflib import Graph, RDF, Namespace, RDFS
+from AgentUtil.DSO import DSO
+from AgentUtil.Agent import Agent
+from AgentUtil.Logging import config_logger
 
 from flask import Flask, request, render_template
-import numpy as np
-import time
-from random import randint
+
 from uuid import uuid4
 import logging
 
-__author__ = 'bejar'
+__author__ = 'Alexandre Fló Cuesta', 'Marc González Moratona', 'Carles Llongueras Aparicio'
+
+app = Flask(__name__)
+
+directory = {}
+loadbalance = {}
+schedule = 'equaljobs'
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--open', help="Define si el servidor esta abierto al exterior o no", action='store_true',
+                    default=False)
+parser.add_argument('--verbose', help="Genera un log de la comunicacion del servidor web", action='store_true',
+                    default=False)
+parser.add_argument('--port', type=int, help="Puerto de comunicacion del agente")
+parser.add_argument('--schedule', default='random', choices=['equaljobs', 'random'],
+                    help="Algoritmo de reparto de carga")
+
+# Logging
+logger = config_logger(level=1)
+
+# parsing de los parametros de la linea de comandos
+args = parser.parse_args()
+
+if not args.verbose:
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+
+mss_cnt = 0
+
+cola1 = Queue()  # Cola de comunicacion entre procesos
+
+# Configuration stuff
+if args.port is None:
+    port = 9000
+else:
+    port = args.port
+
+if args.open:
+    hostname = '0.0.0.0'
+    hostaddr = gethostname()
+else:
+    hostaddr = hostname = socket.gethostname()
+
+schedule = args.schedule
+
+# Directory Service Graph
+dsgraph = Graph()
+# Vinculamos todos los espacios de nombre a utilizar
+dsgraph.bind('acl', ACL)
+dsgraph.bind('rdf', RDF)
+dsgraph.bind('rdfs', RDFS)
+dsgraph.bind('foaf', FOAF)
+dsgraph.bind('dso', DSO)
+
+agn = Namespace("http://www.agentes.org#")
+DirectoryService = Agent('ServiceAgent',
+                         agn.DirectoryService,
+                         'http://%s:%d/register' % (hostaddr, port),
+                         'http://%s:%d/stop' % (hostaddr, port))
 
 
 def obscure(dir):
@@ -44,72 +112,125 @@ def obscure(dir):
     return odir
 
 
-app = Flask(__name__)
-
-directory = {}
-loadbalance = {}
-schedule = 'equaljobs'
-
-
-@app.route("/message")
-def message():
+@app.route("/register")
+def register():
     """
-    Entrypoint para todas las comunicaciones
+    Entry point del agente que recibe los mensajes de registro
+    La respuesta es enviada al retornar la funcion,
+    no hay necesidad de enviar el mensaje explicitamente
+
+    Asumimos una version simplificada del protocolo FIPA-request
+    en la que no enviamos el mesaje Agree cuando vamos a responder
 
     :return:
     """
-    global directory
-    global loadbalance
 
-    mess = request.args['message']
+    def process_register():
+        # Si la hay extraemos el nombre del agente (FOAF.name), el URI del agente
+        # su direccion y su tipo
+        logger.info('Peticion de registro')
 
-    if '|' not in mess:
-        return 'ERROR: INVALID MESSAGE'
-    else:
-        # Sintaxis de los mensajes "TIPO|PARAMETROS"
-        messtype, messparam = mess.split('|')
+        agn_add = gm.value(subject=content, predicate=DSO.Address)
+        agn_name = gm.value(subject=content, predicate=FOAF.name)
+        agn_uri = gm.value(subject=content, predicate=DSO.Uri)
+        agn_type = gm.value(subject=content, predicate=DSO.AgentType)
 
-        if messtype not in ['REGISTER', 'SEARCH', 'UNREGISTER']:
-            return 'ERROR: NO SUCH ACTION'
+        # Añadimos la informacion en el grafo de registro vinculandola a la URI
+        # del agente y registrandola como tipo FOAF.Agent
+        dsgraph.add((agn_uri, RDF.type, FOAF.Agent))
+        dsgraph.add((agn_uri, FOAF.name, agn_name))
+        dsgraph.add((agn_uri, DSO.Address, agn_add))
+        dsgraph.add((agn_uri, DSO.AgentType, agn_type))
+
+        # Generamos un mensaje de respuesta
+        return build_message(Graph(),
+                             ACL.confirm,
+                             sender=DirectoryService.uri,
+                             receiver=agn_uri,
+                             msgcnt=mss_cnt)
+
+    def process_search():
+        # Asumimos que hay una accion de busqueda que puede tener
+        # diferentes parametros en funcion de si se busca un tipo de agente
+        # o un agente concreto por URI o nombre
+        # Podriamos resolver esto tambien con un query-ref y enviar un objeto de
+        # registro con variables y constantes
+
+        # Solo consideramos cuando Search indica el tipo de agente
+        # Buscamos una coincidencia exacta
+        # Retornamos el primero de la lista de posibilidades
+
+        logger.info('Peticion de busqueda')
+
+        agn_type = gm.value(subject=content, predicate=DSO.AgentType)
+        rsearch = dsgraph.triples((None, DSO.AgentType, agn_type))
+        if rsearch is not None:
+            agn_uri = next(rsearch)[0]
+            agn_add = dsgraph.value(subject=agn_uri, predicate=DSO.Address)
+            gr = Graph()
+            gr.bind('dso', DSO)
+            rsp_obj = agn['Directory-response']
+            gr.add((rsp_obj, DSO.Address, agn_add))
+            gr.add((rsp_obj, DSO.Uri, agn_uri))
+            return build_message(gr,
+                                 ACL.inform,
+                                 sender=DirectoryService.uri,
+                                 msgcnt=mss_cnt,
+                                 receiver=agn_uri,
+                                 content=rsp_obj)
         else:
-            # parametros mensaje REGISTER = "ID,TIPO,ADDRESS"
-            if messtype == 'REGISTER':
-                param = messparam.split(',')
-                if len(param) == 3:
-                    serid, sertype, seraddress = param
-                    if serid not in directory:
-                        directory[serid] = (sertype, seraddress, time.strftime('%Y-%m-%d %H:%M'))
-                        loadbalance[serid] = 0
-                        return 'OK: REGISTER SUCCESS'
-                    else:
-                        return 'ERROR: ID ALREADY REGISTERED'
-                else:
-                    return 'ERROR: REGISTER INVALID PARAMETERS'
-            # parametros del mensaje SEARCH = 'TIPO'
-            elif messtype == 'SEARCH':
-                sertype = messparam
-                found = [(id, directory[id][1]) for id in directory if directory[id][0] == sertype]
-                if len(found) != 0:
-                    if schedule == 'equaljobs':
-                        # balanceo por igual numero de jobs
-                        bal = [loadbalance[id] for id, _ in found]
-                        pos = np.argmin(bal)
-                    elif schedule == 'random':
-                        pos = randint(0, len(found) - 1)
-                    else:
-                        pos = 0
-                    loadbalance[found[pos][0]] += 1
-                    return 'OK: ' + found[pos][1]
-                else:
-                    return 'ERROR: NOT FOUND'
-            # parametros del mensaje UNREGISTER = 'ID'
-            elif messtype == 'UNREGISTER':
-                serid = messparam
-                if serid in directory:
-                    del directory[serid]
-                    return 'OK: UNREGISTER SUCCESS'
-                else:
-                    return 'ERROR: NOT REGISTERED'
+            # Si no encontramos nada retornamos un inform sin contenido
+            return build_message(Graph(),
+                                 ACL.inform,
+                                 sender=DirectoryService.uri,
+                                 msgcnt=mss_cnt)
+
+    global dsgraph
+    global mss_cnt
+    # Extraemos el mensaje y creamos un grafo con él
+    message = request.args['content']
+    gm = Graph()
+    gm.parse(data=message)
+
+    msgdic = get_message_properties(gm)
+
+    # Comprobamos que sea un mensaje FIPA ACL
+    if not msgdic:
+        # Si no es, respondemos que no hemos entendido el mensaje
+        gr = build_message(Graph(),
+                           ACL['not-understood'],
+                           sender=DirectoryService.uri,
+                           msgcnt=mss_cnt)
+    else:
+        # Obtenemos la performativa
+        if msgdic['performative'] != ACL.request:
+            logger.info('No es un request')
+            # Si no es un request, respondemos que no hemos entendido el mensaje
+            gr = build_message(Graph(),
+                               ACL['not-understood'],
+                               sender=DirectoryService.uri,
+                               msgcnt=mss_cnt)
+        else:
+            # Extraemos el objeto del contenido que ha de ser una accion de la ontologia
+            # de registro
+            content = msgdic['content']
+            # Averiguamos el tipo de la accion
+            accion = gm.value(subject=content, predicate=RDF.type)
+
+            # Accion de registro
+            if accion == DSO.Register:
+                gr = process_register()
+            # Accion de busqueda
+            elif accion == DSO.Search:
+                gr = process_search()
+            # No habia ninguna accion en el mensaje
+            else:
+                gr = build_message(Graph(),
+                                   ACL['not-understood'],
+                                   sender=DirectoryService.uri,
+                                   msgcnt=mss_cnt)
+    mss_cnt += 1
+    return gr.serialize(format='xml')
 
 
 @app.route('/info')
@@ -117,10 +238,12 @@ def info():
     """
     Entrada que da informacion sobre el agente a traves de una pagina web
     """
+    global dsgraph
+    global mss_cnt
     global directory
     global loadbalance
 
-    return render_template('directory.html', dir=obscure(directory), bal=loadbalance)
+    return render_template('directory.html', dir=obscure(directory), bal=loadbalance, nmess=mss_cnt, graph=dsgraph.serialize(format='turtle'))
 
 
 @app.route("/stop")
@@ -128,41 +251,45 @@ def stop():
     """
     Entrada que para el agente
     """
+    tidyup()
     shutdown_server()
     return "Parando Servidor"
 
 
+def tidyup():
+    """
+    Acciones previas a parar el agente
+
+    """
+    global cola1
+    cola1.put(0)
+
+
+def agentbehavior1(cola):
+    """
+    Behaviour que simplemente espera mensajes de una cola y los imprime
+    hasta que llega un 0 a la cola
+    """
+    fin = False
+    while not fin:
+        while cola.empty():
+            pass
+        v = cola.get()
+        if v == 0:
+            print(v)
+            return 0
+        else:
+            print(v)
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--open', help="Define si el servidor esta abierto al exterior o no", action='store_true',
-                        default=False)
-    parser.add_argument('--verbose', help="Genera un log de la comunicacion del servidor web", action='store_true',
-                        default=False)
-    parser.add_argument('--port', type=int, help="Puerto de comunicacion del agente")
-    parser.add_argument('--schedule', default='random', choices=['equaljobs', 'random'],
-                        help="Algoritmo de reparto de carga")
+    # Ponemos en marcha los behaviours como procesos
+    ab1 = Process(target=agentbehavior1, args=(cola1,))
+    ab1.start()
 
-    # parsing de los parametros de la linea de comandos
-    args = parser.parse_args()
-
-    if not args.verbose:
-        log = logging.getLogger('werkzeug')
-        log.setLevel(logging.ERROR)
-
-    # Configuration stuff
-    if args.port is None:
-        port = 9000
-    else:
-        port = args.port
-
-    if args.open:
-        hostname = '0.0.0.0'
-        hostaddr = gethostname()
-    else:
-        hostaddr = hostname = socket.gethostname()
-
-    schedule = args.schedule
-
-    print('DS Hostname =', hostaddr)
     # Ponemos en marcha el servidor Flask
     app.run(host=hostname, port=port, debug=True, use_reloader=False)
+
+    ab1.join()
+    logger.info('The End')
+
