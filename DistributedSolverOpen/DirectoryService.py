@@ -24,7 +24,7 @@ from AgentUtil.ACL import ACL
 from rdflib.namespace import FOAF
 from multiprocessing import Process, Queue
 
-from DistributedSolverOpen.AgentUtil.ACLMessages import build_message, get_message_properties
+from AgentUtil.ACLMessages import build_message, get_message_properties
 from Util import gethostname
 import socket
 import argparse

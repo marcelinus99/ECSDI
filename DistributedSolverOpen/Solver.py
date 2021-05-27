@@ -90,15 +90,15 @@ mss_cnt = 0
 
 # Datos del Agente
 Solver = Agent('SolverAgent',
-                       agn.Solver,
-                       'http://%s:%d/comm' % (hostaddr, port),
-                       'http://%s:%d/stop' % (hostaddr, port))
+               agn.Solver,
+               'http://%s:%d/comm' % (hostaddr, port),
+               'http://%s:%d/stop' % (hostaddr, port))
 
 # Directory agent address
 DirectoryService = Agent('ServiceAgent',
-                       agn.DirectoryService,
-                       'http://%s:%d/register' % (dhostname, dport),
-                       'http://%s:%d/stop' % (dhostname, dport))
+                         agn.DirectoryService,
+                         'http://%s:%d/register' % (dhostname, dport),
+                         'http://%s:%d/stop' % (dhostname, dport))
 
 # Global dsgraph triplestore
 dsgraph = Graph()
@@ -178,13 +178,13 @@ def start():
     # ab2 = Process(target=buscarTransport)
     # ab3 = Process(target=buscarActivitats)
     ab1.start()
-    #ab2.start()
-    #ab3.start()
+    # ab2.start()
+    # ab3.start()
 
     # Esperamos a que acaben los behaviors
     ab1.join()
-    #ab2.join()
-    #ab3.join()
+    # ab2.join()
+    # ab3.join()
 
     return render_template('clientproblems.html', probs=problems)
 
@@ -293,20 +293,25 @@ def buscarAllotjament():
     global mss_cnt
 
     gr = directory_search_message(DSO.HotelsAgent)
-
+    logger.info('Enviamos informacion a allotjament')
     grafo = Graph()
+    IAA = Namespace('IAActions')
+    n = Namespace('EJEMPLO')
     grafo.bind('foaf', FOAF)
-
+    grafo.bind('iaa', IAA)
     reg_obj = agn[Solver.name + '-info-send']
-    grafo.add((reg_obj, FOAF.logo, Literal("Barcelona"))) # Fecha inicio
-    #grafo.add((reg_obj, FOAF.thumbnail, request.form['trip-end'])) # Fecha final
-    #grafo.add((reg_obj, FOAF.sha1, request.form['origin-city'])) # Ciudad Origen
-    #grafo.add((reg_obj, FOAF.tipjar, request.form['destination-city'])) # Ciudad Destino
-    #grafo.add((reg_obj, FOAF.PersonalProfileDocument, request.form['trip-start'])) # Fecha inicio
-
+    grafo.add((reg_obj, RDF.type, IAA.Search))
+    c1 = n.Bacelona
+    grafo.add(c1, RDF.type, FOAF.person)
+    # Fecha inicio
+    # grafo.add((reg_obj, FOAF.thumbnail, request.form['trip-end'])) # Fecha final
+    # grafo.add((reg_obj, FOAF.sha1, request.form['origin-city'])) # Ciudad Origen
+    # grafo.add((reg_obj, FOAF.tipjar, request.form['destination-city'])) # Ciudad Destino
+    # grafo.add((reg_obj, FOAF.PersonalProfileDocument, request.form['trip-start'])) # Fecha inicio
 
     # Obtenemos la direccion del agente de la respuesta
     # No hacemos ninguna comprobacion sobre si es un mensaje valido
+
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)
     ragn_addr = gr.value(subject=content, predicate=DSO.Address)
@@ -315,8 +320,10 @@ def buscarAllotjament():
     msg = build_message(grafo, perf=ACL.request,
                         sender=Solver.uri,
                         receiver=ragn_uri,
+                        content=content,
                         msgcnt=mss_cnt)
     gr_allot = send_message(msg, ragn_addr)
+    logger.info('Respuesta allotjament recibida')
     mss_cnt += 1
 
     return gr_allot
@@ -354,8 +361,5 @@ def infoagent_search_message(addr, ragn_uri):
 
 
 if __name__ == '__main__':
-
     # Ponemos en marcha el servidor Flask
     app.run(host=hostname, port=port, debug=True, use_reloader=False)
-
-

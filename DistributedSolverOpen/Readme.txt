@@ -118,11 +118,11 @@ Pasos:
 
   $ python Solver.py --dhost pcera
   $ python Solver.py --dhost http://DESKTOP-5IGN934:9000
-  $ python Solver.py --dhost http://DESKTOP-53V8IFQ:9000
+  $ python Solver.py --dhost DESKTOP-53V8IFQ
 
   $ python AllotjamentAgent.py --dhost pcera
   $ python AllotjamentAgent.py --dhost http://DESKTOP-5IGN934:9000
-  $ python AllotjamentAgent.py --dhost http://DESKTOP-53V8IFQ:9000
+  $ python AllotjamentAgent.py --dhost DESKTOP-53V8IFQ
 
   $ python TransportAgent.py --dhost pcera
   $ python TransportAgent.py --dhost http://DESKTOP-5IGN934:9000

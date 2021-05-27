@@ -139,11 +139,13 @@ def solver(grafo):
     :param param:
     :return:
     """
-    reg_obj = agn[Solver.name + '-info-send']
+    """reg_obj = agn[Solver.name + '-info-send']
 
-    destination = grafo.triples(reg_obj, FOAF.logo, None)
-    res = search_hotels(destination)
-    print(res)
+    destination = grafo.triples(reg_obj, FOAF.logo, None)"""
+    mesg = grafo.value(predicate=RDF.type, object=ACL.FipaAclMessage)
+    city = grafo.triples()
+    logger.info(city)
+    res = search_hotels('Barcelona')
     return res
 
 
@@ -238,12 +240,11 @@ def comunicacion():
         else:
             # Extraemos el objeto del contenido que ha de ser una accion de la ontologia de acciones del agente
             # de registro
-
             # Averiguamos el tipo de la accion
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
-                solver(gm)
+                solution = solver(gm)
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done
@@ -252,9 +253,8 @@ def comunicacion():
                                sender=AllotjamentAgent.uri,
                                msgcnt=mss_cnt,
                                receiver=msgdic['sender'], )
-    mss_cnt += 1
     logger.info('Respondemos a la peticion')
-
+    mss_cnt += 1
     return gr.serialize(format='xml')
 
 
