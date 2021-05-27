@@ -132,16 +132,19 @@ def info():
     return a
 
 
-def solver(saddress, probid, start, end, destination):
+def solver(grafo):
     """
     Hace la resolucion de un problema
 
     :param param:
     :return:
     """
+    reg_obj = agn[Solver.name + '-info-send']
+
+    destination = grafo.triples(reg_obj, FOAF.logo, None)
     res = search_hotels(destination)
     print(res)
-    requests.get(saddress + '/message', params={'message': f'SOLVED|{probid},{res}'})
+    return res
 
 
 def register_message():
@@ -212,7 +215,7 @@ def comunicacion():
     global dsgraph
     global mss_cnt
 
-    #logger.info('Peticion de informacion recibida')
+    logger.info('Peticion de informacion recibida')
 
     # Extraemos el mensaje y creamos un grafo con el
     message = request.args['content']
@@ -240,6 +243,7 @@ def comunicacion():
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
+                solver(gm)
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done
@@ -249,8 +253,7 @@ def comunicacion():
                                msgcnt=mss_cnt,
                                receiver=msgdic['sender'], )
     mss_cnt += 1
-
-    #logger.info('Respondemos a la peticion')
+    logger.info('Respondemos a la peticion')
 
     return gr.serialize(format='xml')
 

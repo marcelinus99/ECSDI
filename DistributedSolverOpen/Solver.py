@@ -19,17 +19,18 @@ Solver
 
 """
 
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from Util import gethostname
 import socket
 import argparse
+from rdflib import Graph, Namespace, Literal
 from rdflib.namespace import FOAF, RDF
 from AgentUtil.ACL import ACL
 from AgentUtil.DSO import DSO
-from AgentUtil.ACLMessages import build_message, send_message
+from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 
 from FlaskServer import shutdown_server
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from uuid import uuid4
 import logging
 from AgentUtil.Logging import config_logger
@@ -49,15 +50,19 @@ parser.add_argument('--port', type=int, help="Puerto de comunicacion del agente"
 parser.add_argument('--dhost', help="Host del agente de directorio")
 parser.add_argument('--dport', type=int, help="Puerto de comunicacion del agente de directorio")
 
+# Logging
+logger = config_logger(level=1)
+
 # parsing de los parametros de la linea de comandos
 args = parser.parse_args()
+
 if not args.verbose:
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
 
 # Configuration stuff
 if args.port is None:
-    port = 9010
+    port = 9001
 else:
     port = args.port
 
@@ -70,7 +75,7 @@ if args.open:
     hostname = '0.0.0.0'
     hostaddr = gethostname()
 else:
-    hostaddr = hostname = '127.0.0.1'
+    hostaddr = hostname = socket.gethostname()
 
 if args.dhost is None:
     dhostname = gethostname()
@@ -98,13 +103,13 @@ DirectoryService = Agent('ServiceAgent',
 # Global dsgraph triplestore
 dsgraph = Graph()
 
+# Cola de comunicacion entre procesos
+cola1 = Queue()
 
 app = Flask(__name__)
 
 problems = {}
-
-# Logging
-logger = config_logger(level=1)
+probcounter = 0
 
 
 def obscure(dir):
@@ -129,6 +134,18 @@ def info():
     return render_template('solverproblems.html', probs=obscure(problems))
 
 
+@app.route('/iface')
+def iface():
+    """
+    Interfaz con el solver a traves de una pagina de web
+    """
+    global problems
+
+    citylist = ['Barcelona', 'Madrid', 'Paris', 'Milan', 'Londres', 'Munich', 'NuevaYork', 'Berlin']
+    activity = ['Nada', 'Algo', 'Normal', 'Mucho']
+    return render_template('iface.html', cities=citylist, activitytype=activity, probs=problems)
+
+
 def tidyup():
     """
     Acciones previas a parar el agente
@@ -149,6 +166,29 @@ def stop():
     return "Parando Servidor"
 
 
+@app.route("/message", methods=['GET', 'POST'])
+def start():
+    """
+    Entrypoint que inicia el agente
+
+    :return:
+    """
+    # Ponemos en marcha los behaviors
+    ab1 = Process(target=buscarAllotjament)
+    # ab2 = Process(target=buscarTransport)
+    # ab3 = Process(target=buscarActivitats)
+    ab1.start()
+    #ab2.start()
+    #ab3.start()
+
+    # Esperamos a que acaben los behaviors
+    ab1.join()
+    #ab2.join()
+    #ab3.join()
+
+    return render_template('clientproblems.html', probs=problems)
+
+
 def directory_search_message(type):
     """
     Busca en el servicio de registro mandando un
@@ -161,7 +201,7 @@ def directory_search_message(type):
     :return:
     """
     global mss_cnt
-    # logger.info('Buscamos en el servicio de registro')
+    logger.info('Buscamos en el servicio de registro')
 
     gmess = Graph()
 
@@ -178,9 +218,67 @@ def directory_search_message(type):
                         msgcnt=mss_cnt)
     gr = send_message(msg, DirectoryService.address)
     mss_cnt += 1
-    # logger.info('Recibimos informacion del agente')
+    logger.info('Recibimos informacion del agente')
 
     return gr
+
+
+@app.route("/comm")
+def comunicacion():
+    """
+    Entrypoint de comunicacion del agente
+    Simplemente retorna un objeto fijo que representa una
+    respuesta a una busqueda de hotel
+
+    Asumimos que se reciben siempre acciones que se refieren a lo que puede hacer
+    el agente (buscar con ciertas restricciones, reservar)
+    Las acciones se mandan siempre con un Request
+    Prodriamos resolver las busquedas usando una performativa de Query-ref
+    """
+    global dsgraph
+    global mss_cnt
+
+    logger.info('Peticion de informacion recibida')
+
+    # Extraemos el mensaje y creamos un grafo con el
+    message = request.args['content']
+    gm = Graph()
+    gm.parse(data=message)
+
+    msgdic = get_message_properties(gm)
+
+    # Comprobamos que sea un mensaje FIPA ACL
+    if msgdic is None:
+        # Si no es, respondemos que no hemos entendido el mensaje
+        gr = build_message(Graph(), ACL['not-understood'], sender=Solver.uri, msgcnt=mss_cnt)
+    else:
+        # Obtenemos la performativa
+        perf = msgdic['performative']
+
+        if perf != ACL.request:
+            # Si no es un request, respondemos que no hemos entendido el mensaje
+            gr = build_message(Graph(), ACL['not-understood'], sender=Solver.uri, msgcnt=mss_cnt)
+        else:
+            # Extraemos el objeto del contenido que ha de ser una accion de la ontologia de acciones del agente
+            # de registro
+
+            # Averiguamos el tipo de la accion
+            if 'content' in msgdic:
+                content = msgdic['content']
+                accion = gm.value(subject=content, predicate=RDF.type)
+
+            # Aqui realizariamos lo que pide la accion
+            # Por ahora simplemente retornamos un Inform-done
+            gr = build_message(Graph(),
+                               ACL['inform'],
+                               sender=Solver.uri,
+                               msgcnt=mss_cnt,
+                               receiver=msgdic['sender'], )
+    mss_cnt += 1
+
+    logger.info('Respondemos a la peticion')
+
+    return gr.serialize(format='xml')
 
 
 def buscarAllotjament():
@@ -192,7 +290,20 @@ def buscarAllotjament():
 
     # Buscamos en el directorio
     # un agente de hoteles
+    global mss_cnt
+
     gr = directory_search_message(DSO.HotelsAgent)
+
+    grafo = Graph()
+    grafo.bind('foaf', FOAF)
+
+    reg_obj = agn[Solver.name + '-info-send']
+    grafo.add((reg_obj, FOAF.logo, Literal("Barcelona"))) # Fecha inicio
+    #grafo.add((reg_obj, FOAF.thumbnail, request.form['trip-end'])) # Fecha final
+    #grafo.add((reg_obj, FOAF.sha1, request.form['origin-city'])) # Ciudad Origen
+    #grafo.add((reg_obj, FOAF.tipjar, request.form['destination-city'])) # Ciudad Destino
+    #grafo.add((reg_obj, FOAF.PersonalProfileDocument, request.form['trip-start'])) # Fecha inicio
+
 
     # Obtenemos la direccion del agente de la respuesta
     # No hacemos ninguna comprobacion sobre si es un mensaje valido
@@ -201,9 +312,17 @@ def buscarAllotjament():
     ragn_addr = gr.value(subject=content, predicate=DSO.Address)
     ragn_uri = gr.value(subject=content, predicate=DSO.Uri)
 
+    msg = build_message(grafo, perf=ACL.request,
+                        sender=Solver.uri,
+                        receiver=ragn_uri,
+                        msgcnt=mss_cnt)
+    gr_allot = send_message(msg, ragn_addr)
+    mss_cnt += 1
+
+    return gr_allot
     # Ahora mandamos un objeto de tipo request mandando una accion de tipo Search
     # que esta en una supuesta ontologia de acciones de agentes
-    infoagent_search_message(ragn_addr, ragn_uri)
+    # infoagent_search_message(ragn_addr, ragn_uri)
 
 
 def infoagent_search_message(addr, ragn_uri):
@@ -235,13 +354,8 @@ def infoagent_search_message(addr, ragn_uri):
 
 
 if __name__ == '__main__':
-    # Ponemos en marcha los behaviors
-    ab1 = Process(target=buscarAllotjament)
-    ab1.start()
 
     # Ponemos en marcha el servidor Flask
     app.run(host=hostname, port=port, debug=True, use_reloader=False)
 
-    # Esperamos a que acaben los behaviors
-    ab1.join()
 

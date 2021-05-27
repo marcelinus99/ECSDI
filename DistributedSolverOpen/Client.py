@@ -18,7 +18,6 @@ Client
 
 :Created on: 19/05/2021 10:27
 
-"""
 from multiprocessing import Process, Queue
 from rdflib import Graph, Namespace, Literal
 from rdflib.namespace import FOAF, RDF
@@ -109,14 +108,13 @@ probcounter = 0
 
 
 def register_message():
-    """
+
     Envia un mensaje de registro al servicio de registro
     usando una performativa Request y una accion Register del
     servicio de directorio
 
     :param gmess:
     :return:
-    """
 
     logger.info('Nos registramos')
 
@@ -149,9 +147,7 @@ def register_message():
 
 @app.route('/info')
 def info():
-    """
     Entrada que da informacion sobre el agente a traves de una pagina web
-    """
     global problems
 
     return render_template('clientproblems.html', probs=problems)
@@ -159,9 +155,8 @@ def info():
 
 @app.route('/iface')
 def iface():
-    """
+
     Interfaz con el cliente a traves de una pagina de web
-    """
     global problems
 
     citylist = ['Barcelona', 'Madrid', 'Paris', 'Milan', 'Londres', 'Munich', 'NuevaYork', 'Berlin']
@@ -171,11 +166,11 @@ def iface():
 
 @app.route("/stop")
 def stop():
-    """
+
     Entrypoint que para el agente
 
     :return:
-    """
+
     tidyup()
     shutdown_server()
     return "Parando Servidor"
@@ -184,7 +179,7 @@ def stop():
 
 @app.route("/comm")
 def comunicacion():
-    """
+
     Entrypoint de comunicacion del agente
     Simplemente retorna un objeto fijo que representa una
     respuesta a una busqueda de hotel
@@ -193,7 +188,7 @@ def comunicacion():
     el agente (buscar con ciertas restricciones, reservar)
     Las acciones se mandan siempre con un Request
     Prodriamos resolver las busquedas usando una performativa de Query-ref
-    """
+
     global dsgraph
     global mss_cnt
 
@@ -241,20 +236,19 @@ def comunicacion():
 
 
 def tidyup():
-    """
+
     Acciones previas a parar el agente
 
-    """
     global cola1
     cola1.put(0)
 
 
 def agentbehavior1(cola):
-    """
+
     Un comportamiento del agente
 
     :return:
-    """
+
     # Registramos el agente
     gr = register_message()
 
@@ -280,3 +274,5 @@ if __name__ == '__main__':
 
     # Esperamos a que acaben los behaviors
     ab1.join()
+
+"""

@@ -9,7 +9,6 @@ IATA = {'Barcelona': 'BCN', 'Madrid': 'MAD', 'Paris': 'PAR', 'Milan': 'MIL', 'Lo
         'NuevaYork': 'NYC', 'Berlin': 'BER'}
 
 
-
 def search_hotels(destination):
     try:
 

@@ -1,16 +1,27 @@
+## ECSDI QP 2020-21
+
+### Práctica de Ingeniería del Conocimiento y Sistemas Inteligentes Distribuidos de la Facultad de Informática de Barcelona (FIB)
+
+### Universidad Politécnica de Cataluña (UPC)
+
+Alumnos:
+
+* Carles Llongueras Aparicio
+* Alexandre Fló Cuesta
+* Marc González Moratona
+
 DistributedSolverOpen
 =====================
 
-Sistema distribuido para resolucion de problemas simples.
+Sistema distribuido para búsqueda de viajes.
 
 El sistema esta formado por:
 
   * Un servicio de directorio
-  * Solver generico que recibe las peticiones y las distribuye
-  * Solver para problemas ARITH
-  * Solver para problemas MFREQ
-  * Un logger de la actividad de los solvers genericos
-  * Un cliente que manda peticiones a los solver genericos
+  * Solver que recibe las peticiones y las distribuye
+  * Solver para problemas alojamiento
+  * Solver para problemas transporte
+  * Solver para problemas actividades
 
 El servicio de directorio hace de servicio de descubrimiento y es utilizado por los agentes cada vez que tienen que
 asignar una tarea a otros agentes
@@ -100,31 +111,24 @@ Pasos:
 
  1- Iniciar un DirectoryService y abrir el navegador en la pagina /info del agente (pcera:9000/info)
 
-  python DirectoryService.py
+  $ python DirectoryService.py
 
- 3- Iniciar una o mas copias de Solver, Arithmetic y LetterCounter (los agentes Solver tambien tienen una pagina /info
+ 2- Iniciar una o mas copias de Solver (puerto 9001), Allotjament (puerto 9010), Activitats (puerto 9030) y Transport (puerto 9020) (los agentes Solver tambien tienen una pagina /info
      que se puede monitorizar)
 
   $ python Solver.py --dhost pcera
-   python Solver.py --port 9010 --dir http://DESKTOP-5IGN934:9000
-  $ python Solver.py --port 9010 --dir http://DESKTOP-53V8IFQ:9000
+  $ python Solver.py --dhost http://DESKTOP-5IGN934:9000
+  $ python Solver.py --dhost http://DESKTOP-53V8IFQ:9000
 
   $ python AllotjamentAgent.py --dhost pcera
-   python AllotjamentAgent.py --port 9020 --dir http://DESKTOP-5IGN934:9000
-  $ python AllotjamentAgent.py --port 9020 --dir http://DESKTOP-53V8IFQ:9000
-
+  $ python AllotjamentAgent.py --dhost http://DESKTOP-5IGN934:9000
+  $ python AllotjamentAgent.py --dhost http://DESKTOP-53V8IFQ:9000
 
   $ python TransportAgent.py --dhost pcera
-   python TransportAgent.py --port 9030 --dir http://DESKTOP-5IGN934:9000
-  $ python TransportAgent.py --port 9030 --dir http://DESKTOP-53V8IFQ:9000
+  $ python TransportAgent.py --dhost http://DESKTOP-5IGN934:9000
+  $ python TransportAgent.py --dhost http://DESKTOP-53V8IFQ:9000
 
- 4- Iniciar Client y abrir en el navegador las paginas /iface y /info
-
-  $ python Client.py --port 9001 --dhost pcera
-   python Client.py --port 9001 --dir http://DESKTOP-5IGN934:9000
-  $ python Client.py --port 9001 --dir http://DESKTOP-53V8IFQ:9000
-
- 5- Ejecutar problemas desde la pagina /iface del cliente
+ 3- Ejecutar problemas desde la pagina /iface del solver
 
 Si se va a iniciar el sistema desde varias maquinas se han de ejecutar los agentes con el parametro --open
 
