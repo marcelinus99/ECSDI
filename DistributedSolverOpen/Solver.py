@@ -23,7 +23,7 @@ from multiprocessing import Process, Queue
 from Util import gethostname
 import socket
 import argparse
-from rdflib import Graph, Namespace, Literal
+from rdflib import Graph, Namespace, Literal, URIRef
 from rdflib.namespace import FOAF, RDF, XSD
 from AgentUtil.ACL import ACL
 from AgentUtil.DSO import DSO
@@ -175,7 +175,7 @@ def start():
     :return:
     """
     # Ponemos en marcha los behaviors
-    ab1 = Process(target=buscarAllotjament)
+    ab1 = Process(target=buscarAllotjament, args=('HOLAMUNDO',))
     # ab2 = Process(target=buscarTransport)
     # ab3 = Process(target=buscarActivitats)
     ab1.start()
@@ -282,7 +282,7 @@ def comunicacion():
     return gr.serialize(format='xml')
 
 
-def buscarAllotjament():
+def buscarAllotjament(destinyCity):
     """
     Un comportamiento del agente
 
@@ -298,8 +298,7 @@ def buscarAllotjament():
     grafo = Graph()
     reg_obj = EJEMPLO[Solver.name + '-info-send']
     grafo.add((reg_obj, RDF.type, EJEMPLO.VIAJE))
-    grafo.add((reg_obj, EJEMPLO.City, Literal('Barcelona', datatype=XSD.string)))
-
+    grafo.add((reg_obj, EJEMPLO.City, Literal(destinyCity, datatype=XSD.string)))
 
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)

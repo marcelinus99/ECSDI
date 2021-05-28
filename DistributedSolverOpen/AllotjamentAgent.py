@@ -139,7 +139,6 @@ def solver(city):
     :param param:
     :return:
     """
-    logger.info(city)
     res = search_hotels('Barcelona')
     return res
 
@@ -240,9 +239,9 @@ def comunicacion():
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
                 if accion == EJEMPLO.VIAJE:
-                    object = gm.objects(content, EJEMPLO.VIAJE)
-                    destiny = gm.value(subject=object, predicate=EJEMPLO.City)
-                    solution = solver(destiny)
+                    c = gm.value(subject=content, predicate=EJEMPLO.City)
+                    logger.info(c)
+                    solution = solver('None')
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done
