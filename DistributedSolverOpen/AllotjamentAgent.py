@@ -26,7 +26,7 @@ from AgentUtil.Agent import Agent
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from rdflib.namespace import FOAF, RDF
 from AgentUtil.ACL import ACL
-
+from AgentUtil.OntoNamespaces import EJEMPLO
 from amadeus_api import search_hotels
 from Util import gethostname
 import socket
@@ -132,18 +132,13 @@ def info():
     return a
 
 
-def solver(grafo):
+def solver(city):
     """
     Hace la resolucion de un problema
 
     :param param:
     :return:
     """
-    """reg_obj = agn[Solver.name + '-info-send']
-
-    destination = grafo.triples(reg_obj, FOAF.logo, None)"""
-    mesg = grafo.value(predicate=RDF.type, object=ACL.FipaAclMessage)
-    city = grafo.triples()
     logger.info(city)
     res = search_hotels('Barcelona')
     return res
@@ -244,7 +239,10 @@ def comunicacion():
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
-                solution = solver(gm)
+                if accion == EJEMPLO.VIAJE:
+                    object = gm.objects(content, EJEMPLO.VIAJE)
+                    destiny = gm.value(subject=object, predicate=EJEMPLO.City)
+                    solution = solver(destiny)
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done

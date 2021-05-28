@@ -24,9 +24,10 @@ from Util import gethostname
 import socket
 import argparse
 from rdflib import Graph, Namespace, Literal
-from rdflib.namespace import FOAF, RDF
+from rdflib.namespace import FOAF, RDF, XSD
 from AgentUtil.ACL import ACL
 from AgentUtil.DSO import DSO
+from AgentUtil.OntoNamespaces import EJEMPLO
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 
 from FlaskServer import shutdown_server
@@ -295,22 +296,10 @@ def buscarAllotjament():
     gr = directory_search_message(DSO.HotelsAgent)
     logger.info('Enviamos informacion a allotjament')
     grafo = Graph()
-    IAA = Namespace('IAActions')
-    n = Namespace('EJEMPLO')
-    grafo.bind('foaf', FOAF)
-    grafo.bind('iaa', IAA)
-    reg_obj = agn[Solver.name + '-info-send']
-    grafo.add((reg_obj, RDF.type, IAA.Search))
-    c1 = n.Bacelona
-    grafo.add(c1, RDF.type, FOAF.person)
-    # Fecha inicio
-    # grafo.add((reg_obj, FOAF.thumbnail, request.form['trip-end'])) # Fecha final
-    # grafo.add((reg_obj, FOAF.sha1, request.form['origin-city'])) # Ciudad Origen
-    # grafo.add((reg_obj, FOAF.tipjar, request.form['destination-city'])) # Ciudad Destino
-    # grafo.add((reg_obj, FOAF.PersonalProfileDocument, request.form['trip-start'])) # Fecha inicio
+    reg_obj = EJEMPLO[Solver.name + '-info-send']
+    grafo.add((reg_obj, RDF.type, EJEMPLO.VIAJE))
+    grafo.add((reg_obj, EJEMPLO.City, Literal('Barcelona', datatype=XSD.string)))
 
-    # Obtenemos la direccion del agente de la respuesta
-    # No hacemos ninguna comprobacion sobre si es un mensaje valido
 
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)
@@ -320,7 +309,7 @@ def buscarAllotjament():
     msg = build_message(grafo, perf=ACL.request,
                         sender=Solver.uri,
                         receiver=ragn_uri,
-                        content=content,
+                        content=reg_obj,
                         msgcnt=mss_cnt)
     gr_allot = send_message(msg, ragn_addr)
     logger.info('Respuesta allotjament recibida')
