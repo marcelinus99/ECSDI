@@ -134,7 +134,7 @@ def register():
         agn_name = gm.value(subject=content, predicate=FOAF.name)
         agn_uri = gm.value(subject=content, predicate=DSO.Uri)
         agn_type = gm.value(subject=content, predicate=DSO.AgentType)
-
+        logger.info('Registrado agente: ' + agn_name + ' - tipus:' + agn_type)
         # Añadimos la informacion en el grafo de registro vinculandola a la URI
         # del agente y registrandola como tipo FOAF.Agent
         dsgraph.add((agn_uri, RDF.type, FOAF.Agent))
@@ -242,7 +242,6 @@ def info():
     global mss_cnt
     global directory
     global loadbalance
-
     return render_template('directory.html', dir=obscure(directory), bal=loadbalance, nmess=mss_cnt, graph=dsgraph.serialize(format='turtle'))
 
 
@@ -270,7 +269,7 @@ def agentbehavior1(cola):
     Behaviour que simplemente espera mensajes de una cola y los imprime
     hasta que llega un 0 a la cola
     """
-    fin = False
+    """fin = False
     while not fin:
         while cola.empty():
             pass
@@ -279,7 +278,7 @@ def agentbehavior1(cola):
             print(v)
             return 0
         else:
-            print(v)
+            print(v)"""
 
 
 if __name__ == '__main__':

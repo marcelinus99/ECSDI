@@ -169,24 +169,9 @@ def stop():
 
 @app.route("/message", methods=['GET', 'POST'])
 def start():
-    """
-    Entrypoint que inicia el agente
-
-    :return:
-    """
-    # Ponemos en marcha los behaviors
-    ab1 = Process(target=buscarAllotjament, args=(request.form['destination-city'],))
-    # ab2 = Process(target=buscarTransport)
-    # ab3 = Process(target=buscarActivitats)
-    ab1.start()
-    # ab2.start()
-    # ab3.start()
-
-    # Esperamos a que acaben los behaviors
-    ab1.join()
-    # ab2.join()
-    # ab3.join()
-
+    buscarAllotjament(request.form['destination-city'])
+    buscarTransport(request.form['trip-start'], request.form['trip-end'], request.form['origin-city'],
+                    request.form['destination-city'])
     return render_template('clientproblems.html', probs=problems)
 
 
@@ -211,7 +196,6 @@ def directory_search_message(type):
     reg_obj = agn[Solver.name + '-search']
     gmess.add((reg_obj, RDF.type, DSO.Search))
     gmess.add((reg_obj, DSO.AgentType, type))
-
     msg = build_message(gmess, perf=ACL.request,
                         sender=Solver.uri,
                         receiver=DirectoryService.uri,
@@ -282,6 +266,41 @@ def comunicacion():
     return gr.serialize(format='xml')
 
 
+def buscarTransport(trip_start, trip_end, origin, destination):
+    global mss_cnt
+
+    gr = directory_search_message(DSO.FlightsAgent)
+    logger.info('Enviamos informacion a transport')
+    grafo = Graph()
+    reg_obj = EJEMPLO[Solver.name + '-info-sendTran']
+    grafo.add((reg_obj, RDF.type, EJEMPLO.LLEGAR))
+    grafo.add((reg_obj, EJEMPLO.INI, Literal(trip_start, datatype=XSD.string)))
+    grafo.add((reg_obj, EJEMPLO.FI, Literal(trip_end, datatype=XSD.string)))
+    grafo.add((reg_obj, EJEMPLO.CityIN, Literal(origin, datatype=XSD.string)))
+    grafo.add((reg_obj, EJEMPLO.CityFIN, Literal(destination, datatype=XSD.string)))
+
+    msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
+    content = gr.value(subject=msg, predicate=ACL.content)
+    ragn_addr = gr.value(subject=content, predicate=DSO.Address)
+    ragn_uri = gr.value(subject=content, predicate=DSO.Uri)
+
+    msg = build_message(grafo, perf=ACL.request,
+                        sender=Solver.uri,
+                        receiver=ragn_uri,
+                        content=reg_obj,
+                        msgcnt=mss_cnt)
+    gr_allot = send_message(msg, ragn_addr)
+    for objects in gr_allot.subjects(RDF.type, EJEMPLO.FlightsAgent):
+        nom = gr_allot.value(subject=objects, predicate=EJEMPLO.Nombre)
+        precio = gr_allot.value(subject=objects, predicate=EJEMPLO.Precio)
+        logger.info(nom + '/' + precio)
+
+    logger.info('Respuesta transport recibida')
+    mss_cnt += 1
+
+    return gr_allot
+
+
 def buscarAllotjament(destinyCity):
     """
     Un comportamiento del agente
@@ -296,7 +315,7 @@ def buscarAllotjament(destinyCity):
     gr = directory_search_message(DSO.HotelsAgent)
     logger.info('Enviamos informacion a allotjament')
     grafo = Graph()
-    reg_obj = EJEMPLO[Solver.name + '-info-send']
+    reg_obj = EJEMPLO[Solver.name + '-info-sendAl']
     grafo.add((reg_obj, RDF.type, EJEMPLO.VIAJE))
     grafo.add((reg_obj, EJEMPLO.City, Literal(destinyCity, datatype=XSD.string)))
 

@@ -126,7 +126,7 @@ Pasos:
 
   $ python TransportAgent.py --dhost pcera
   $ python TransportAgent.py --dhost http://DESKTOP-5IGN934:9000
-  $ python TransportAgent.py --dhost http://DESKTOP-53V8IFQ:9000
+  $ python TransportAgent.py --dhost DESKTOP-53V8IFQ
 
  3- Ejecutar problemas desde la pagina /iface del solver
 
