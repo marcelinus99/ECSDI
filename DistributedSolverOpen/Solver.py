@@ -175,7 +175,7 @@ def start():
     :return:
     """
     # Ponemos en marcha los behaviors
-    ab1 = Process(target=buscarAllotjament, args=('HOLAMUNDO',))
+    ab1 = Process(target=buscarAllotjament, args=(request.form['destination-city'],))
     # ab2 = Process(target=buscarTransport)
     # ab3 = Process(target=buscarActivitats)
     ab1.start()
@@ -311,6 +311,10 @@ def buscarAllotjament(destinyCity):
                         content=reg_obj,
                         msgcnt=mss_cnt)
     gr_allot = send_message(msg, ragn_addr)
+    for objects in gr_allot.subjects(RDF.type, EJEMPLO.ALOJAMIENTO):
+        nom = gr_allot.value(subject=objects, predicate=EJEMPLO.Nombre)
+        precio = gr_allot.value(subject=objects, predicate=EJEMPLO.Precio)
+        logger.info(nom + '/' + precio)
     logger.info('Respuesta allotjament recibida')
     mss_cnt += 1
 

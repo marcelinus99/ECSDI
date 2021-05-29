@@ -24,7 +24,7 @@ from rdflib import Graph, Namespace, Literal
 from AgentUtil.DSO import DSO
 from AgentUtil.Agent import Agent
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
-from rdflib.namespace import FOAF, RDF
+from rdflib.namespace import FOAF, RDF, XSD
 from AgentUtil.ACL import ACL
 from AgentUtil.OntoNamespaces import EJEMPLO
 from amadeus_api import search_hotels
@@ -139,7 +139,7 @@ def solver(city):
     :param param:
     :return:
     """
-    res = search_hotels('Barcelona')
+    res = search_hotels(city)
     return res
 
 
@@ -235,21 +235,36 @@ def comunicacion():
             # Extraemos el objeto del contenido que ha de ser una accion de la ontologia de acciones del agente
             # de registro
             # Averiguamos el tipo de la accion
+            respuesta = Graph()
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
                 if accion == EJEMPLO.VIAJE:
                     c = gm.value(subject=content, predicate=EJEMPLO.City)
-                    logger.info(c)
-                    solution = solver('None')
+                    solution = solver(c)
+
+                    for value in solution:
+                        clave = value
+                        valor = solution[value]
+                        reg_obj = EJEMPLO[AllotjamentAgent.name + '-response' + value]
+                        respuesta.add((reg_obj, RDF.type, EJEMPLO.ALOJAMIENTO))
+                        respuesta.add((reg_obj, EJEMPLO.Nombre, Literal(clave, datatype=XSD.string)))
+                        respuesta.add((reg_obj, EJEMPLO.Precio, Literal(valor)))
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done
-            gr = build_message(Graph(),
-                               ACL['inform'],
-                               sender=AllotjamentAgent.uri,
-                               msgcnt=mss_cnt,
-                               receiver=msgdic['sender'], )
+                gr = build_message(respuesta,
+                                   ACL['inform'],
+                                   sender=AllotjamentAgent.uri,
+                                   msgcnt=mss_cnt,
+                                   receiver=msgdic['sender'], )
+            else:
+                gr = build_message(Graph(),
+                   ACL['inform'],
+                   sender=AllotjamentAgent.uri,
+                   msgcnt=mss_cnt,
+                   receiver=msgdic['sender'], )
+
     logger.info('Respondemos a la peticion')
     mss_cnt += 1
     return gr.serialize(format='xml')

@@ -9,9 +9,9 @@ IATA = {'Barcelona': 'BCN', 'Madrid': 'MAD', 'Paris': 'PAR', 'Milan': 'MIL', 'Lo
         'NuevaYork': 'NYC', 'Berlin': 'BER'}
 
 
-def search_hotels(destination):
+def search_hotels(city):
     try:
-
+        destination = str(city)
         response = amadeus.shopping.hotel_offers.get(cityCode=IATA[destination]).result
         s1 = json.dumps(response)
         d2 = json.loads(s1)
