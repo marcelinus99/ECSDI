@@ -169,10 +169,16 @@ def stop():
 
 @app.route("/message", methods=['GET', 'POST'])
 def start():
-    #buscarAllotjament(request.form['destination-city'])
-    #buscarTransport(request.form['trip-start'], request.form['trip-end'], request.form['origin-city'],
-                  #  request.form['destination-city'])
-    buscarActivitats(request.form['destination-city'],)
+    global problems
+
+    buscarAllotjament(request.form['destination-city'])
+    buscarTransport(request.form['trip-start'], request.form['trip-end'], request.form['origin-city'],
+                    request.form['destination-city'])
+    logger.info(problems)
+    index = 0
+    while not problems[index]:
+        problems[index] = request.form['destination-city']
+    logger.info(problems)
     return render_template('clientproblems.html', probs=problems)
 
 
@@ -340,6 +346,7 @@ def buscarAllotjament(destinyCity):
 
     return gr_allot
 
+
 def buscarActivitats(city):
     global mss_cnt
 
@@ -364,9 +371,6 @@ def buscarActivitats(city):
     for objects in gr_allot.subjects(RDF.type, ECSDI.ACTIVITY):
         nom = gr_allot.value(subject=objects, predicate=ECSDI.Nombre)
         precio = gr_allot.value(subject=objects, predicate=ECSDI.Tipo)
-        logger.info(nom + '/' + precio)
-    logger.info('Respuesta allotjament recibida')
-    mss_cnt += 1
 
     return gr_allot
 
