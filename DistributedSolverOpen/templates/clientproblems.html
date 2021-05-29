@@ -25,32 +25,30 @@
                     <th>Prob ID</th>
                     <th>Prob Type</th>
 					<th>Fecha de inicio</th>
-					<th>Fecha de fin</th>
+					<th>Fecha de regreso</th>
 					<th>Ciudad</th>
 					<th>Precio</th>
 					<th>Nombre del alojamiento</th>
                     <th>Solution</th>
 
 				</tr>
-				{% for id in probs|sort %}
-				{% if probs[id][0] == 'REQALLOTJAMENT' %}
+				{% for id in all|sort %}
 				<tr>
-                    <td>{{id}}</td>
-                    <td>{{probs[id][0]}}</td>
-					<td>{{probs[id][1]}}</td>
-					<td>{{probs[id][2]}}</td>
-					<td>{{probs[id][4]}}</td>
-					<td>{{probs[id][5]}}</td>
-					<td>{{probs[id][6]}}</td>
-                    <td>{{probs[id][10]}}</td>
+                    <td>{{id+1}}</td>
+                    <td>{{all[id][0]}}</td>
+					<td>{{all[id][1]}}</td>
+					<td>{{all[id][2]}}</td>
+					<td>{{all[id][3]}}</td>
+					<td>{{all[id][4]}}</td>
+					<td>{{all[id][5]}}</td>
+                    <td>{{all[id][6]}}</td>
 				</tr>
-				{% endif %}
 				{% endfor %}
 			</table>
 		</div>
 		<br>
         		<div style="margin-left: 50px">
-			<h3><label>Transporte</label></h3>
+			<h3><label>Información de transportes</label></h3>
 		</div>
 		<br>
 		<div style="margin-left: 80px;margin-right: 80px">
@@ -65,20 +63,42 @@
                     <th>Precio</th>
                     <th>Solution</th>
                 </tr>
-				{% for id in probs|sort %}
-				{% if probs[id][0] == 'REQTRANSPORT' %}
+				{% for id in tra|sort %}
 				<tr>
-                    <td>{{id}}</td>
-                    <td>{{probs[id][0]}}</td>
-					<td>{{probs[id][1]}}</td>
-					<td>{{probs[id][2]}}</td>
-					<td>{{probs[id][3]}}</td>
-					<td>{{probs[id][4]}}</td>
-					<td>{{probs[id][5]}}</td>
-                    <td>{{probs[id][10]}}</td>
-
+                    <td>{{id+1}}</td>
+                    <td>{{tra[id][0]}}</td>
+					<td>{{tra[id][1]}}</td>
+					<td>{{tra[id][2]}}</td>
+					<td>{{tra[id][3]}}</td>
+					<td>{{tra[id][4]}}</td>
+					<td>{{tra[id][5]}}</td>
+                    <td>{{tra[id][6]}}</td>
 				</tr>
-				{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+		<br>
+		<div style="margin-left: 80px;margin-right: 80px">
+			<table class="table table-borderless">
+				<tr class="table-light">
+                    <th>Prob ID</th>
+                    <th>Prob Type</th>
+					<th>Fecha de salida</th>
+                    <th>Fecha de regreso</th>
+                    <th>Ciudad destino</th>
+                    <th>Precio</th>
+                    <th>Solution</th>
+                </tr>
+				{% for id in act|sort %}
+				<tr>
+                    <td>{{id+1}}</td>
+                    <td>{{act[id][0]}}</td>
+					<td>{{act[id][1]}}</td>
+					<td>{{act[id][2]}}</td>
+					<td>{{act[id][3]}}</td>
+					<td>{{act[id][4]}}</td>
+					<td>{{act[id][5]}}</td>
+				</tr>
 				{% endfor %}
 			</table>
 		</div>

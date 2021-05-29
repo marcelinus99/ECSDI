@@ -109,20 +109,10 @@ cola1 = Queue()
 
 app = Flask(__name__)
 
-problems = {}
+allot = {}
+transp = {}
+activ = {}
 probcounter = 0
-
-
-def obscure(dir):
-    """
-    Hide real hostnames
-    """
-    odir = {}
-    for d in dir:
-        _, _, port = dir[d][1].split(':')
-        odir[d] = (dir[d][0], f'{uuid4()}:{port}', dir[d][2], dir[d][3])
-
-    return odir
 
 
 @app.route('/info')
@@ -130,9 +120,10 @@ def info():
     """
     Entrada que da informacion sobre el agente a traves de una pagina web
     """
-    global problems
-
-    return render_template('solverproblems.html', probs=obscure(problems))
+    global allot
+    global transp
+    global activ
+    return render_template('solverproblems.html', all=allot, tra=transp, act=activ)
 
 
 @app.route('/iface')
@@ -140,11 +131,13 @@ def iface():
     """
     Interfaz con el solver a traves de una pagina de web
     """
-    global problems
+    global allot
+    global transp
+    global activ
 
     citylist = ['Barcelona', 'Madrid', 'Paris', 'Milan', 'Londres', 'Munich', 'NuevaYork', 'Berlin']
     activity = ['Nada', 'Algo', 'Normal', 'Mucho']
-    return render_template('iface.html', cities=citylist, activitytype=activity, probs=problems)
+    return render_template('iface.html', cities=citylist, activitytype=activity, all=allot, tra=transp, act=activ)
 
 
 def tidyup():
@@ -169,17 +162,27 @@ def stop():
 
 @app.route("/message", methods=['GET', 'POST'])
 def start():
-    global problems
+    global allot
+    global transp
+    global activ
+    origen = request.form['origin-city']
+    destino = request.form['destination-city']
+    fecha_ini = request.form['trip-start']
+    fecha_fin = request.form['trip-end']
 
-    buscarAllotjament(request.form['destination-city'])
-    buscarTransport(request.form['trip-start'], request.form['trip-end'], request.form['origin-city'],
-                    request.form['destination-city'])
-    logger.info(problems)
-    index = 0
-    while not problems[index]:
-        problems[index] = request.form['destination-city']
-    logger.info(problems)
-    return render_template('clientproblems.html', probs=problems)
+    alojamientos = buscarAllotjament(destino)
+    transportes = buscarTransport(fecha_ini, fecha_fin, origen, destino)
+    actividades = buscarActivitats(destino)
+    index = -1
+    while index < len(allot):
+        index += 1
+    for i in range(len(alojamientos)):
+        allot[index] = ['REQALLOTJAMENT', fecha_ini, fecha_fin, destino, alojamientos[i]]
+    for i in range(len(transportes)):
+        transp[index] = ['REQTRANSPORT',  fecha_ini, fecha_fin, origen, destino, transportes[i]]
+    for i in range(len(actividades)):
+        activ[index] = ['REQACTIVITAT',  fecha_ini, fecha_fin, destino, actividades[i]]
+    return render_template('clientproblems.html', all=allot, tra=transp, act=activ)
 
 
 def directory_search_message(type):
@@ -297,18 +300,21 @@ def buscarTransport(trip_start, trip_end, origin, destination):
                         content=reg_obj,
                         msgcnt=mss_cnt)
     gr_allot = send_message(msg, ragn_addr)
+    i = 0
+    respuesta = {}
     for objects in gr_allot.subjects(RDF.type, ECSDI.FlightsAgent):
         nom = gr_allot.value(subject=objects, predicate=ECSDI.Nombre)
         precio = gr_allot.value(subject=objects, predicate=ECSDI.Precio)
-        logger.info(nom + '/' + precio)
-
+        respuesta[i] = [nom, precio]
+        i += 1
     logger.info('Respuesta transport recibida')
     mss_cnt += 1
+    logger.info(respuesta)
 
-    return gr_allot
+    return respuesta
 
 
-def buscarAllotjament(destinyCity):
+def buscarAllotjament(destinationCity):
     """
     Un comportamiento del agente
 
@@ -324,7 +330,7 @@ def buscarAllotjament(destinyCity):
     grafo = Graph()
     reg_obj = ECSDI[Solver.name + '-info-sendAl']
     grafo.add((reg_obj, RDF.type, ECSDI.VIAJE))
-    grafo.add((reg_obj, ECSDI.City, Literal(destinyCity, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.City, Literal(destinationCity, datatype=XSD.string)))
 
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)
@@ -336,15 +342,19 @@ def buscarAllotjament(destinyCity):
                         receiver=ragn_uri,
                         content=reg_obj,
                         msgcnt=mss_cnt)
-    gr_allot = send_message(msg, ragn_addr)
-    for objects in gr_allot.subjects(RDF.type, ECSDI.ALOJAMIENTO):
-        nom = gr_allot.value(subject=objects, predicate=ECSDI.Nombre)
-        precio = gr_allot.value(subject=objects, predicate=ECSDI.Precio)
-        logger.info(nom + '/' + precio)
+    gr_transp = send_message(msg, ragn_addr)
+    i = 0
+    respuesta = {}
+    for objects in gr_transp.subjects(RDF.type, ECSDI.ALOJAMIENTO):
+        nom = gr_transp.value(subject=objects, predicate=ECSDI.Nombre)
+        precio = gr_transp.value(subject=objects, predicate=ECSDI.Precio)
+        respuesta[i] = [nom, precio]
+        i += 1
     logger.info('Respuesta allotjament recibida')
     mss_cnt += 1
+    logger.info(respuesta)
 
-    return gr_allot
+    return respuesta
 
 
 def buscarActivitats(city):
@@ -367,12 +377,19 @@ def buscarActivitats(city):
                         receiver=ragn_uri,
                         content=reg_obj,
                         msgcnt=mss_cnt)
-    gr_allot = send_message(msg, ragn_addr)
-    for objects in gr_allot.subjects(RDF.type, ECSDI.ACTIVITY):
-        nom = gr_allot.value(subject=objects, predicate=ECSDI.Nombre)
-        precio = gr_allot.value(subject=objects, predicate=ECSDI.Tipo)
+    gr_act = send_message(msg, ragn_addr)
+    i = 0
+    respuesta = {}
+    for objects in gr_act.subjects(RDF.type, ECSDI.ACTIVITY):
+        nom = gr_act.value(subject=objects, predicate=ECSDI.Nombre)
+        tipo = gr_act.value(subject=objects, predicate=ECSDI.Tipo)
+        respuesta[i] = [nom, tipo]
+        i += 1
+    logger.info('Respuesta actividades recibida')
+    mss_cnt += 1
+    logger.info(respuesta)
 
-    return gr_allot
+    return respuesta
 
 
 def infoagent_search_message(addr, ragn_uri):

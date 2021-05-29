@@ -128,6 +128,8 @@ Pasos:
   $ python TransportAgent.py --dhost http://DESKTOP-5IGN934:9000
   $ python TransportAgent.py --dhost DESKTOP-53V8IFQ
 
+  $ python ActivitiesAgent.py --dhost pcera
+  $ python ActivitiesAgent.py --dhost http://DESKTOP-5IGN934:9000
   $ python ActivitiesAgent.py --dhost DESKTOP-53V8IFQ
 
 
