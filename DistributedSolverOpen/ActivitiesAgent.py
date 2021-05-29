@@ -1,24 +1,4 @@
-"""
-.. module:: FlightsAgent
 
-FlightsAgent
-*************
-
-:Description: FlightsAgent
-
-    Buscador de transportes para un paquete de viaje
-
-:Authors:
-    Carles Llongueras Aparicio
-    Alexandre Fló Cuesta
-    Marc González Moratona
-
-
-:Version:
-
-:Created on: 18/05/2021 17:06
-
-"""
 from uuid import uuid4
 from rdflib import Graph, Namespace, Literal
 from AgentUtil.DSO import DSO
@@ -27,7 +7,7 @@ from AgentUtil.ACLMessages import build_message, send_message, get_message_prope
 from rdflib.namespace import FOAF, RDF, XSD
 from AgentUtil.ACL import ACL
 from AgentUtil.OntoNamespaces import ECSDI
-from amadeus_api import search_hotels, search_vuelos
+from amadeus_api import search_activity
 from Util import gethostname
 import socket
 import argparse
@@ -73,7 +53,7 @@ if not args.verbose:
 
 # Configuration stuff
 if args.port is None:
-    port = 9030
+    port = 9040
 else:
     port = args.port
 
@@ -93,10 +73,9 @@ if args.dhost is None:
 else:
     dhostname = args.dhost
 
-
 # Datos del Agente
-FlightsAgent = Agent('FlightsAgent',
-                         agn.FlightsAgent,
+TravelServiceAgent = Agent('ActivitiesAgent',
+                         agn.TravelServiceAgent,
                          'http://%s:%d/comm' % (hostaddr, port),
                          'http://%s:%d/stop' % (hostaddr, port))
 
@@ -133,14 +112,14 @@ def info():
     return a
 
 
-def solver(trip_in, trip_fin, origin, destiny):
+def solver(city):
     """
     Hace la resolucion de un problema
 
     :param param:
     :return:
     """
-    res = search_vuelos(trip_in,trip_fin,origin,destiny)
+    res = search_activity(city)
     return res
 
 
@@ -164,17 +143,17 @@ def register_message():
     # Construimos el mensaje de registro
     gmess.bind('foaf', FOAF)
     gmess.bind('dso', DSO)
-    reg_obj = agn[FlightsAgent.name + '-Register']
+    reg_obj = agn[TravelServiceAgent.name + '-Register']
     gmess.add((reg_obj, RDF.type, DSO.Register))
-    gmess.add((reg_obj, DSO.Uri, FlightsAgent.uri))
-    gmess.add((reg_obj, FOAF.name, Literal(FlightsAgent.name)))
-    gmess.add((reg_obj, DSO.Address, Literal(FlightsAgent.address)))
-    gmess.add((reg_obj, DSO.AgentType, DSO.FlightsAgent))
+    gmess.add((reg_obj, DSO.Uri, TravelServiceAgent.uri))
+    gmess.add((reg_obj, FOAF.name, Literal(TravelServiceAgent.name)))
+    gmess.add((reg_obj, DSO.Address, Literal(TravelServiceAgent.address)))
+    gmess.add((reg_obj, DSO.AgentType, DSO.TravelServiceAgent))
 
     # Lo metemos en un envoltorio FIPA-ACL y lo enviamos
     gr = send_message(
         build_message(gmess, perf=ACL.request,
-                      sender=FlightsAgent.uri,
+                      sender=TravelServiceAgent.uri,
                       receiver=DirectoryService.uri,
                       content=reg_obj,
                       msgcnt=mss_cnt),
@@ -202,7 +181,7 @@ def comunicacion():
     """
     Entrypoint de comunicacion del agente
     Simplemente retorna un objeto fijo que representa una
-    respuesta a una busqueda de hotel
+    respuesta a una busqueda de actividades
 
     Asumimos que se reciben siempre acciones que se refieren a lo que puede hacer
     el agente (buscar con ciertas restricciones, reservar)
@@ -224,14 +203,14 @@ def comunicacion():
     # Comprobamos que sea un mensaje FIPA ACL
     if msgdic is None:
         # Si no es, respondemos que no hemos entendido el mensaje
-        gr = build_message(Graph(), ACL['not-understood'], sender=FlightsAgent.uri, msgcnt=mss_cnt)
+        gr = build_message(Graph(), ACL['not-understood'], sender=TravelServiceAgent.uri, msgcnt=mss_cnt)
     else:
         # Obtenemos la performativa
         perf = msgdic['performative']
 
         if perf != ACL.request:
             # Si no es un request, respondemos que no hemos entendido el mensaje
-            gr = build_message(Graph(), ACL['not-understood'], sender=FlightsAgent.uri, msgcnt=mss_cnt)
+            gr = build_message(Graph(), ACL['not-understood'], sender=TravelServiceAgent.uri, msgcnt=mss_cnt)
         else:
             # Extraemos el objeto del contenido que ha de ser una accion de la ontologia de acciones del agente
             # de registro
@@ -240,32 +219,25 @@ def comunicacion():
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
-                if accion == ECSDI.LLEGAR:
-                    trip_in = gm.value(subject=content, predicate=ECSDI.INI)
-                    trip_fin = gm.value(subject=content, predicate=ECSDI.FI)
-                    city_in = gm.value(subject=content, predicate=ECSDI.CityIN)
-                    city_fin = gm.value(subject=content, predicate=ECSDI.CityFIN)
-                    solution = solver(trip_in,trip_fin,city_in,city_fin)
-                    logger.info(solution)
+                if accion == ECSDI.VIAJE:
+                    c = gm.value(subject=content, predicate=ECSDI.City)
+                    solution = solver(c)
                     for value in solution:
                         clave = value
                         valor = solution[value]
-                        reg_obj = ECSDI[FlightsAgent.name + '-response' + value]
-                        respuesta.add((reg_obj, RDF.type, ECSDI.FlightsAgent))
+                        reg_obj = ECSDI[TravelServiceAgent.name + '-response' + value]
+                        respuesta.add((reg_obj, RDF.type, ECSDI.ACTIVITY))
                         respuesta.add((reg_obj, ECSDI.Nombre, Literal(clave, datatype=XSD.string)))
-                        respuesta.add((reg_obj, ECSDI.Precio, Literal(valor)))
-
-            # Aqui realizariamos lo que pide la accion
-            # Por ahora simplemente retornamos un Inform-done
-                gr = build_message(respuesta,
-                                   ACL['inform'],
-                                   sender=FlightsAgent.uri,
-                                   msgcnt=mss_cnt,
-                                   receiver=msgdic['sender'], )
+                        respuesta.add((reg_obj, ECSDI.Tipo, Literal(valor, datatype=XSD.string)))
+                    gr = build_message(respuesta,
+                                       ACL['inform'],
+                                       sender=TravelServiceAgent.uri,
+                                       msgcnt=mss_cnt,
+                                       receiver=msgdic['sender'], )
             else:
                 gr = build_message(Graph(),
                    ACL['inform'],
-                   sender=FlightsAgent.uri,
+                   sender=TravelServiceAgent.uri,
                    msgcnt=mss_cnt,
                    receiver=msgdic['sender'], )
 
@@ -293,8 +265,8 @@ def agentbehavior1(cola):
     gr = register_message()
 
     # Escuchando la cola hasta que llegue un 0
-    fin = False
-    """while not fin:
+    """fin = False
+    while not fin:
         while cola.empty():
             pass
         v = cola.get()
@@ -314,5 +286,3 @@ if __name__ == '__main__':
 
     # Esperamos a que acaben los behaviors
     ab1.join()
-
-

@@ -8,6 +8,10 @@ amadeus = Client(client_id='YDp2dotKO0oTzRQ2EALTAKVH4cY1D1Qm', client_secret='0v
 IATA = {'Barcelona': 'BCN', 'Madrid': 'MAD', 'Paris': 'PAR', 'Milan': 'MIL', 'Londres': 'LON', 'Munich': 'MUC',
         'NuevaYork': 'NYC', 'Berlin': 'BER'}
 
+GEO = {'Barcelona': '41.390205/2.154007', 'Madrid': '40.416775/-3.703790', 'Paris': '48.858093/2.294694',
+       'Milan': '45.464664/9.188540', 'Londres': '51.509865/-0.118092', 'Munich': '48.137154/11.576124',
+       'NuevaYork': '40.785091/-73.968285', 'Berlin': '52.531677/13.381777'}
+
 
 def search_hotels(city):
     try:
@@ -48,9 +52,24 @@ def search_vuelos(fechaIn, fechaFin, origin, destination):
             for i2 in it:
                 final = i2['arrival']['iataCode']
             a = airports.airport_iata(final)
-            #cositas = a[0] + "/" + price
+            # cositas = a[0] + "/" + price
             contenidoViaje[a[0]] = price
 
         return contenidoViaje
     except ResponseError as error:
         print(error)
+
+
+def search_activity(ciudad):
+    pos = GEO[str(ciudad)].split('/')
+    latitude = pos[0]
+    longitud = pos[1]
+    response = amadeus.reference_data.locations.points_of_interest.get(latitude=float(latitude), longitude=float(longitud)).result
+    s1 = json.dumps(response)
+    d2 = json.loads(s1)
+    contenidoHoteles = {}
+    for i in d2['data']:
+        nombre = i["name"]
+        categoria = i["category"]
+        contenidoHoteles[nombre] = categoria
+    return contenidoHoteles

@@ -26,7 +26,7 @@ from AgentUtil.Agent import Agent
 from AgentUtil.ACLMessages import build_message, send_message, get_message_properties
 from rdflib.namespace import FOAF, RDF, XSD
 from AgentUtil.ACL import ACL
-from AgentUtil.OntoNamespaces import EJEMPLO
+from AgentUtil.OntoNamespaces import ECSDI
 from amadeus_api import search_hotels
 from Util import gethostname
 import socket
@@ -239,17 +239,17 @@ def comunicacion():
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
-                if accion == EJEMPLO.VIAJE:
-                    c = gm.value(subject=content, predicate=EJEMPLO.City)
+                if accion == ECSDI.VIAJE:
+                    c = gm.value(subject=content, predicate=ECSDI.City)
                     solution = solver(c)
 
                     for value in solution:
                         clave = value
                         valor = solution[value]
-                        reg_obj = EJEMPLO[AllotjamentAgent.name + '-response' + value]
-                        respuesta.add((reg_obj, RDF.type, EJEMPLO.ALOJAMIENTO))
-                        respuesta.add((reg_obj, EJEMPLO.Nombre, Literal(clave, datatype=XSD.string)))
-                        respuesta.add((reg_obj, EJEMPLO.Precio, Literal(valor)))
+                        reg_obj = ECSDI[AllotjamentAgent.name + '-response' + value]
+                        respuesta.add((reg_obj, RDF.type, ECSDI.ALOJAMIENTO))
+                        respuesta.add((reg_obj, ECSDI.Nombre, Literal(clave, datatype=XSD.string)))
+                        respuesta.add((reg_obj, ECSDI.Precio, Literal(valor)))
 
             # Aqui realizariamos lo que pide la accion
             # Por ahora simplemente retornamos un Inform-done
