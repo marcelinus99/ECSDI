@@ -19,7 +19,7 @@ Solver
 
 """
 
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pipe
 from Util import gethostname
 import socket
 import argparse
@@ -35,7 +35,7 @@ from flask import Flask, render_template, request
 from uuid import uuid4
 import logging
 from AgentUtil.Logging import config_logger
-
+import time
 from AgentUtil.Agent import Agent
 from rdflib import Graph, Namespace
 
@@ -114,6 +114,10 @@ transp = {}
 activ = {}
 probcounter = 0
 
+alojamientos = {}
+transportes = {}
+actividades = {}
+
 
 @app.route('/info')
 def info():
@@ -165,23 +169,29 @@ def start():
     global allot
     global transp
     global activ
-    origen = request.form['origin-city']
-    destino = request.form['destination-city']
-    fecha_ini = request.form['trip-start']
-    fecha_fin = request.form['trip-end']
 
-    alojamientos = buscarAllotjament(destino)
-    transportes = buscarTransport(fecha_ini, fecha_fin, origen, destino)
-    actividades = buscarActivitats(destino)
-    index = -1
-    while index < len(allot):
-        index += 1
-    for i in range(len(alojamientos)):
-        allot[index] = ['REQALLOTJAMENT', fecha_ini, fecha_fin, destino, alojamientos[i]]
-    for i in range(len(transportes)):
-        transp[index] = ['REQTRANSPORT',  fecha_ini, fecha_fin, origen, destino, transportes[i]]
-    for i in range(len(actividades)):
-        activ[index] = ['REQACTIVITAT',  fecha_ini, fecha_fin, destino, actividades[i]]
+    global alojamientos
+    global transportes
+    global actividades
+
+    if request.method == 'POST':
+        origen = request.form['origin-city']
+        destino = request.form['destination-city']
+        fecha_ini = request.form['trip-start']
+        fecha_fin = request.form['trip-end']
+        buscarAllotjament(fecha_ini, fecha_fin, destino,)
+        buscarTransport(fecha_ini, fecha_fin, origen, destino,)
+        buscarActivitats(destino)
+    """p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino,))
+    p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino,))
+    p3 = Process(target=buscarActivitats, args=(destino,))
+    p1.start()
+    p2.start()
+    p3.start()
+    p1.join()
+    p2.join()
+    p3.join()"""
+
     return render_template('clientproblems.html', all=allot, tra=transp, act=activ)
 
 
@@ -276,18 +286,20 @@ def comunicacion():
     return gr.serialize(format='xml')
 
 
-def buscarTransport(trip_start, trip_end, origin, destination):
+def buscarTransport(fecha_ini, fecha_fin, origen, destino):
     global mss_cnt
+    global transportes
+    global transp
 
     gr = directory_search_message(DSO.FlightsAgent)
     logger.info('Enviamos informacion a transport')
     grafo = Graph()
     reg_obj = ECSDI[Solver.name + '-info-sendTran']
     grafo.add((reg_obj, RDF.type, ECSDI.LLEGAR))
-    grafo.add((reg_obj, ECSDI.INI, Literal(trip_start, datatype=XSD.string)))
-    grafo.add((reg_obj, ECSDI.FI, Literal(trip_end, datatype=XSD.string)))
-    grafo.add((reg_obj, ECSDI.CityIN, Literal(origin, datatype=XSD.string)))
-    grafo.add((reg_obj, ECSDI.CityFIN, Literal(destination, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.INI, Literal(fecha_ini, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.FI, Literal(fecha_fin, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.CityIN, Literal(origen, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.CityFIN, Literal(destino, datatype=XSD.string)))
 
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)
@@ -301,20 +313,20 @@ def buscarTransport(trip_start, trip_end, origin, destination):
                         msgcnt=mss_cnt)
     gr_allot = send_message(msg, ragn_addr)
     i = 0
-    respuesta = {}
     for objects in gr_allot.subjects(RDF.type, ECSDI.FlightsAgent):
         nom = gr_allot.value(subject=objects, predicate=ECSDI.Nombre)
         precio = gr_allot.value(subject=objects, predicate=ECSDI.Precio)
-        respuesta[i] = [nom, precio]
+        transportes[i] = [nom, precio]
         i += 1
     logger.info('Respuesta transport recibida')
     mss_cnt += 1
-    logger.info(respuesta)
 
-    return respuesta
+    for i in range(len(transportes)):
+        transp[i] = ['REQTRANSPORT',  fecha_ini, fecha_fin, origen, destino, transportes[i][0], transportes[i][1]]
+    return transp
 
 
-def buscarAllotjament(destinationCity):
+def buscarAllotjament(fecha_ini, fecha_fin, destino):
     """
     Un comportamiento del agente
 
@@ -324,13 +336,15 @@ def buscarAllotjament(destinationCity):
     # Buscamos en el directorio
     # un agente de hoteles
     global mss_cnt
+    global alojamientos
+    global allot
 
     gr = directory_search_message(DSO.HotelsAgent)
     logger.info('Enviamos informacion a allotjament')
     grafo = Graph()
     reg_obj = ECSDI[Solver.name + '-info-sendAl']
     grafo.add((reg_obj, RDF.type, ECSDI.VIAJE))
-    grafo.add((reg_obj, ECSDI.City, Literal(destinationCity, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.City, Literal(destino, datatype=XSD.string)))
 
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)
@@ -344,28 +358,29 @@ def buscarAllotjament(destinationCity):
                         msgcnt=mss_cnt)
     gr_transp = send_message(msg, ragn_addr)
     i = 0
-    respuesta = {}
     for objects in gr_transp.subjects(RDF.type, ECSDI.ALOJAMIENTO):
         nom = gr_transp.value(subject=objects, predicate=ECSDI.Nombre)
         precio = gr_transp.value(subject=objects, predicate=ECSDI.Precio)
-        respuesta[i] = [nom, precio]
+        alojamientos[i] = [nom, precio]
         i += 1
     logger.info('Respuesta allotjament recibida')
     mss_cnt += 1
-    logger.info(respuesta)
 
-    return respuesta
+    for i in range(len(alojamientos)):
+        allot[i] = ['REQALLOTJAMENT', fecha_ini, fecha_fin, destino, alojamientos[i][0], alojamientos[i][1]]
+    return allot
 
-
-def buscarActivitats(city):
+def buscarActivitats(destino):
     global mss_cnt
+    global actividades
+    global activ
 
     gr = directory_search_message(DSO.TravelServiceAgent)
     logger.info('Enviamos informacion a activitats')
     grafo = Graph()
     reg_obj = ECSDI[Solver.name + '-info-sendAc']
     grafo.add((reg_obj, RDF.type, ECSDI.VIAJE))
-    grafo.add((reg_obj, ECSDI.City, Literal(city, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.City, Literal(destino, datatype=XSD.string)))
 
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)
@@ -379,17 +394,17 @@ def buscarActivitats(city):
                         msgcnt=mss_cnt)
     gr_act = send_message(msg, ragn_addr)
     i = 0
-    respuesta = {}
     for objects in gr_act.subjects(RDF.type, ECSDI.ACTIVITY):
         nom = gr_act.value(subject=objects, predicate=ECSDI.Nombre)
         tipo = gr_act.value(subject=objects, predicate=ECSDI.Tipo)
-        respuesta[i] = [nom, tipo]
+        actividades[i] = [nom, tipo]
         i += 1
     logger.info('Respuesta actividades recibida')
     mss_cnt += 1
-    logger.info(respuesta)
 
-    return respuesta
+    for i in range(len(actividades)):
+        activ[i] = ['REQACTIVITAT', destino, actividades[i][0], actividades[i][1]]
+    return activ
 
 
 def infoagent_search_message(addr, ragn_uri):

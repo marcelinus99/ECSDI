@@ -265,7 +265,7 @@ def agentbehavior1(cola):
     gr = register_message()
 
     # Escuchando la cola hasta que llegue un 0
-    """fin = False
+    fin = False
     while not fin:
         while cola.empty():
             pass
@@ -273,7 +273,7 @@ def agentbehavior1(cola):
         if v == 0:
             fin = True
         else:
-            print(v)"""
+            print(v)
 
 
 if __name__ == '__main__':

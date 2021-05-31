@@ -294,14 +294,14 @@ def agentbehavior1(cola):
 
     # Escuchando la cola hasta que llegue un 0
     fin = False
-    """while not fin:
+    while not fin:
         while cola.empty():
             pass
         v = cola.get()
         if v == 0:
             fin = True
         else:
-            print(v)"""
+            print(v)
 
 
 if __name__ == '__main__':
