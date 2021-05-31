@@ -35,7 +35,6 @@ from flask import Flask, render_template, request
 from uuid import uuid4
 import logging
 from AgentUtil.Logging import config_logger
-import time
 from AgentUtil.Agent import Agent
 from rdflib import Graph, Namespace
 
@@ -112,7 +111,7 @@ app = Flask(__name__)
 allot = {}
 transp = {}
 activ = {}
-probcounter = 0
+peticiones = 0
 
 alojamientos = {}
 transportes = {}
@@ -174,25 +173,31 @@ def start():
     global transportes
     global actividades
 
+    global peticiones
+
     if request.method == 'POST':
+        q1 = Queue()
+        q2 = Queue()
+        q3 = Queue()
         origen = request.form['origin-city']
         destino = request.form['destination-city']
         fecha_ini = request.form['trip-start']
         fecha_fin = request.form['trip-end']
-        buscarAllotjament(fecha_ini, fecha_fin, destino,)
-        buscarTransport(fecha_ini, fecha_fin, origen, destino,)
-        buscarActivitats(destino)
-    """p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino,))
-    p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino,))
-    p3 = Process(target=buscarActivitats, args=(destino,))
-    p1.start()
-    p2.start()
-    p3.start()
-    p1.join()
-    p2.join()
-    p3.join()"""
+        p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino, q1))
+        p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino, q2))
+        p3 = Process(target=buscarActivitats, args=(destino, q3))
+        p1.start()
+        p2.start()
+        p3.start()
+        p1.join()
+        p2.join()
+        p3.join()
+        allot = q1.get()
+        transp = q2.get()
+        activ = q3.get()
+        peticiones += 1
 
-    return render_template('clientproblems.html', all=allot, tra=transp, act=activ)
+    return render_template('clientproblems.html', all=allot, tra=transp, act=activ, p=peticiones)
 
 
 def directory_search_message(type):
@@ -286,7 +291,7 @@ def comunicacion():
     return gr.serialize(format='xml')
 
 
-def buscarTransport(fecha_ini, fecha_fin, origen, destino):
+def buscarTransport(fecha_ini, fecha_fin, origen, destino, q1):
     global mss_cnt
     global transportes
     global transp
@@ -323,10 +328,11 @@ def buscarTransport(fecha_ini, fecha_fin, origen, destino):
 
     for i in range(len(transportes)):
         transp[i] = ['REQTRANSPORT',  fecha_ini, fecha_fin, origen, destino, transportes[i][0], transportes[i][1]]
-    return transp
+
+    q1.put(transp)
 
 
-def buscarAllotjament(fecha_ini, fecha_fin, destino):
+def buscarAllotjament(fecha_ini, fecha_fin, destino, q2):
     """
     Un comportamiento del agente
 
@@ -368,9 +374,11 @@ def buscarAllotjament(fecha_ini, fecha_fin, destino):
 
     for i in range(len(alojamientos)):
         allot[i] = ['REQALLOTJAMENT', fecha_ini, fecha_fin, destino, alojamientos[i][0], alojamientos[i][1]]
-    return allot
 
-def buscarActivitats(destino):
+    q2.put(allot)
+
+
+def buscarActivitats(destino, q3):
     global mss_cnt
     global actividades
     global activ
@@ -404,7 +412,7 @@ def buscarActivitats(destino):
 
     for i in range(len(actividades)):
         activ[i] = ['REQACTIVITAT', destino, actividades[i][0], actividades[i][1]]
-    return activ
+    q3.put(activ)
 
 
 def infoagent_search_message(addr, ragn_uri):

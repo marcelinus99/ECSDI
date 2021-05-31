@@ -33,7 +33,7 @@
 				</tr>
 				{% for id in all|sort %}
 				<tr>
-                    <td>{{id+1}}</td>
+                    <td>{{p}}</td>
                     <td>{{all[id][0]}}</td>
 					<td>{{all[id][1]}}</td>
 					<td>{{all[id][2]}}</td>
@@ -64,7 +64,7 @@
                 </tr>
 				{% for id in tra|sort %}
 				<tr>
-                    <td>{{id+1}}</td>
+                    <td>{{p}}</td>
                     <td>{{tra[id][0]}}</td>
 					<td>{{tra[id][1]}}</td>
 					<td>{{tra[id][2]}}</td>
@@ -79,6 +79,7 @@
 		<br>
 		<div style="margin-left: 50px">
 			<h3><label>Información de las actividades</label></h3>
+		</div>
 		<div style="margin-left: 80px;margin-right: 80px">
 			<table class="table table-borderless">
 				<tr class="table-light">
@@ -90,7 +91,7 @@
                 </tr>
 				{% for id in act|sort %}
 				<tr>
-                    <td>{{id+1}}</td>
+                    <td>{{p}}</td>
                     <td>{{act[id][0]}}</td>
 					<td>{{act[id][1]}}</td>
 					<td>{{act[id][2]}}</td>
@@ -100,6 +101,7 @@
 				{% endfor %}
 			</table>
 		</div>
+
         <br>
         <form  action="/info" method="get">
                 <button type="submit" class="btn btn-primary"  style="margin-left: 50px">Refrescar la página</button>

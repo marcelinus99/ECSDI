@@ -10,7 +10,7 @@ Alumnos:
 * Alexandre Fló Cuesta
 * Marc González Moratona
 
-DistributedSolverOpen
+TravelPack
 =====================
 
 Sistema distribuido para búsqueda de viajes.
@@ -34,27 +34,9 @@ asignar una tarea a otros agentes
       --open = permite conexiones desde hosts remotos (no por defecto)
       --verbose = va escribiendo por terminal las peticiones que recibe el servidor http
       --port = port de comunicacion (9000 por defecto)
-      --schedule = Algoritmo para el reparto de carga entre agentes
-                  (equaljobs = todos los agentes registrados son asignados el mismo numero de veces,
-                   random = los agentes registrados actualmente se asignan al azar
-                   random por defecto)
 
     Entradas Web:
        /info = Registro de agentes
-
- * Client.py
-
-    Cliente que lanza peticiones a los solver genericos
-
-    Parametros:
-      --open = permite conexiones desde hosts remotos (no por defecto)
-      --verbose = va escribiendo por terminal las peticiones que recibe el servidor http
-      --port = port de comunicacion (9001 por defecto)
-      --dir = Direccion completa del servicio de directorio
-
-    Entradas Web:
-       /iface = Formulario para enviar problemas
-       /info = Lista de problemas enviados
 
  * Solver.py
 
@@ -68,39 +50,9 @@ asignar una tarea a otros agentes
 
 
     Entradas Web:
-       /info = Lista de problemas recibidos
+       /iface = Formulario para enviar problemas
+       /info = Lista de problemas enviados
 
- * Arithmetic.py
-
-    Solver de problemas ARITH (evalua una expresion aritmetica)
-
-    Parametros:
-      --open = permite conexiones desde hosts remotos (no por defecto)
-      --verbose = va escribiendo por terminal las peticiones que recibe el servidor http
-      --port = port de comunicacion (9020 por defecto)
-      --dir = Direccion completa del servicio de directorio
-
- * LetterCounter.py
-
-    Solver de problemas MFREQ (calcula las 10 letras mas frecuentes de un texto)
-
-    Parametros:
-      --open = permite conexiones desde hosts remotos (no por defecto)
-      --verbose = va escribiendo por terminal las peticiones que recibe el servidor http
-      --port = port de comunicacion (9030 por defecto)
-      --dir = Direccion completa del servicio de directorio
-
- * Logger.py
-
-    Registra la actividad de los Solvers genericos
-
-      --open = permite conexiones desde hosts remotos (no por defecto)
-      --verbose = va escribiendo por terminal las peticiones que recibe el servidor http
-      --port = port de comunicacion (9100 por defecto)
-      --dir = Direccion completa del servicio de directorio
-
-    Entradas Web:
-       /info = Grafica de la actividad de los solvers
 
 ----------------------------
 
