@@ -20,7 +20,7 @@ import gzip
 
 from rdflib import Graph
 
-from AgentUtil.OntoNamespaces import TIO
+from TravelPack.AgentUtil import TIO
 
 
 g = Graph()

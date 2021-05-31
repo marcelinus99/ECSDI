@@ -1,7 +1,7 @@
 # Import JSON module
 import json
 from amadeus import Client, ResponseError
-from pyairports.airports import Airports
+from TravelPack.pyairports.airports import Airports
 
 amadeus = Client(client_id='YDp2dotKO0oTzRQ2EALTAKVH4cY1D1Qm', client_secret='0v2nA55ooj6PKVgm')
 
