@@ -116,6 +116,10 @@ peticiones = 0
 alojamientos = {}
 transportes = {}
 actividades = {}
+t_barato = []
+a_barato = []
+all_l = {}
+tr_l = {}
 
 
 @app.route('/info')
@@ -174,6 +178,10 @@ def start():
     global actividades
 
     global peticiones
+    global a_barato
+    global t_barato
+    global all_l
+    global tr_l
 
     if request.method == 'POST':
         q1 = Queue()
@@ -183,6 +191,8 @@ def start():
         destino = request.form['destination-city']
         fecha_ini = request.form['trip-start']
         fecha_fin = request.form['trip-end']
+        max_p = request.form['price-max']
+        min_p = request.form['price-min']
         p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino, q1))
         p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino, q2))
         p3 = Process(target=buscarActivitats, args=(destino, q3))
@@ -197,7 +207,21 @@ def start():
         activ = q3.get()
         peticiones += 1
 
-    return render_template('clientproblems.html', all=allot, tra=transp, act=activ, p=peticiones)
+        for i in range(len(allot)):
+            for j in range(len(transp)):
+                if (float(max_p) >= float(allot[i][5]) + float(transp[j][6])) and (float(allot[i][5]) + float(transp[j][6]) >= float(min_p)):
+                    a_barato.append(allot[i])
+                    logger.info(float(transp[j][6]) + float(allot[i][5]))
+                    transp[j][7] = float(transp[j][6]) + float(allot[i][5])
+                    t_barato.append(transp[j])
+
+        for i in range(len(a_barato)):
+            all_l[i] = a_barato[i]
+
+        for i in range(len(t_barato)):
+            tr_l[i] = t_barato[i]
+
+    return render_template('clientproblems.html', all=all_l, tra=tr_l, act=activ, p=peticiones)
 
 
 def directory_search_message(type):
@@ -327,7 +351,7 @@ def buscarTransport(fecha_ini, fecha_fin, origen, destino, q1):
     mss_cnt += 1
 
     for i in range(len(transportes)):
-        transp[i] = ['REQTRANSPORT',  fecha_ini, fecha_fin, origen, destino, transportes[i][0], transportes[i][1]]
+        transp[i] = ['REQTRANSPORT',  fecha_ini, fecha_fin, origen, destino, transportes[i][0], transportes[i][1], 0.00]
 
     q1.put(transp)
 
