@@ -435,6 +435,15 @@ def buscarActivitats(destino, q3):
     mss_cnt += 1
 
     for i in range(len(actividades)):
+        logger.info(actividades[i][1])
+        if actividades[i][1] == "RESTAURANT":
+            actividades[i][1] = "Lúdica"
+        elif actividades[i][1] == "SHOPPING":
+            actividades[i][1] = "Festiva"
+        elif actividades[i][1] == "SIGHTS":
+            actividades[i][1] = "Cultural"
+        else:
+            actividades[i][1] = "Lúdica"
         activ[i] = ['REQACTIVITAT', destino, actividades[i][0], actividades[i][1]]
     q3.put(activ)
 
