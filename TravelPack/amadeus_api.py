@@ -1,5 +1,7 @@
 # Import JSON module
 import json
+
+import foursquare
 from amadeus import Client, ResponseError
 from TravelPack.pyairports.airports import Airports
 
@@ -11,6 +13,9 @@ IATA = {'Barcelona': 'BCN', 'Madrid': 'MAD', 'Paris': 'PAR', 'Milan': 'MIL', 'Lo
 GEO = {'Barcelona': '41.390205/2.154007', 'Madrid': '40.416775/-3.703790', 'Paris': '48.858093/2.294694',
        'Milan': '45.464664/9.188540', 'Londres': '51.509865/-0.118092', 'Munich': '48.137154/11.576124',
        'NuevaYork': '40.785091/-73.968285', 'Berlin': '52.531677/13.381777'}
+
+CLIENT_ID = 'OTXPMRAIY0GHYDTPXELL1EDHFYNVVRFEMQLHUUVXNEYV1DDS'
+CLIENT_SECRET = '50FCYQPJSHM4CBVXVQFKXVM2AMKAIAEQ3LDZVZZZ44O10MTV'
 
 
 def search_hotels(city):
@@ -64,7 +69,19 @@ def search_activity(ciudad):
     pos = GEO[str(ciudad)].split('/')
     latitude = pos[0]
     longitud = pos[1]
-    response = amadeus.reference_data.locations.points_of_interest.get(latitude=float(latitude), longitude=float(longitud)).result
+
+    client = foursquare.Foursquare(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+
+    v = client.venues.search(params={'ll': '41.4,2.14',
+                                     'intent': 'browse',
+                                     'radius': '4000',
+                                     'query': 'museo'})
+    k = v["venues"]
+    for result in k:
+        print(result["name"])
+
+    response = amadeus.reference_data.locations.points_of_interest.get(latitude=float(latitude),
+                                                                       longitude=float(longitud)).result
     s1 = json.dumps(response)
     d2 = json.loads(s1)
     contenidoHoteles = {}

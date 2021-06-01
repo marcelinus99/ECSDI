@@ -195,43 +195,44 @@ def start():
         fecha_fin = request.form['trip-end']
         max_p = request.form['price-max']
         min_p = request.form['price-min']
-        p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino, q1))
-        p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino, q2))
-        p3 = Process(target=buscarActivitats, args=(destino, q3))
-        p1.start()
-        p2.start()
-        p3.start()
-        p1.join()
-        p2.join()
-        p3.join()
-        allot = q1.get()
-        transp = q2.get()
-        activ = q3.get()
-        peticiones += 1
+        if (str(origen) != str(destino)) and (min_p <= max_p):
+            p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino, q1))
+            p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino, q2))
+            p3 = Process(target=buscarActivitats, args=(destino, q3))
+            p1.start()
+            p2.start()
+            p3.start()
+            p1.join()
+            p2.join()
+            p3.join()
+            allot = q1.get()
+            transp = q2.get()
+            activ = q3.get()
+            peticiones += 1
 
-        for i in range(len(allot)):
-            for j in range(len(transp)):
-                if (float(max_p) >= float(allot[i][5]) + float(transp[j][6])) and (
-                        float(allot[i][5]) + float(transp[j][6]) >= float(min_p)):
-                    t_barato.append(
-                        [fecha_ini, fecha_fin, origen, destino, allot[i][4], allot[i][5], transp[j][5], transp[j][6],
-                         round((float(transp[j][6]) + float(allot[i][5])), 2)])
+            for i in range(len(allot)):
+                for j in range(len(transp)):
+                    if (float(max_p) >= float(allot[i][5]) + float(transp[j][6])) and (
+                            float(allot[i][5]) + float(transp[j][6]) >= float(min_p)):
+                        t_barato.append(
+                            [fecha_ini, fecha_fin, origen, destino, allot[i][4], allot[i][5], transp[j][5], transp[j][6],
+                             round((float(transp[j][6]) + float(allot[i][5])), 2)])
 
-        for i in range(len(allot)):
-            if float(max_p) >= float(allot[i][5]) >= float(min_p):
-                all_l[i] = allot[i]
+            for i in range(len(allot)):
+                if float(max_p) >= float(allot[i][5]) >= float(min_p):
+                    all_l[i] = allot[i]
 
-        for i in range(len(transp)):
-            if float(max_p) >= float(transp[i][6]) >= float(min_p):
-                tr_l[i] = transp[i]
+            for i in range(len(transp)):
+                if float(max_p) >= float(transp[i][6]) >= float(min_p):
+                    tr_l[i] = transp[i]
 
-        for i in range(len(t_barato)):
-            t_bar[i] = t_barato[i]
+            for i in range(len(t_barato)):
+                t_bar[i] = t_barato[i]
 
-    if all_l is None or tr_l is None or t_bar is None or activ is None:
-        return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activ, p=peticiones)
-    else:
+    if len(all_l) == 0 or len(tr_l) == 0 or len(t_bar) == 0 or len(activ) == 0:
         return render_template('restricted.html')
+    else:
+        return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activ, p=peticiones)
 
 
 def directory_search_message(type):
