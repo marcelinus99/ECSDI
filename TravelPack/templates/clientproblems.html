@@ -32,17 +32,17 @@
 					<th>Precio del transporte</th>
 					<th>Precio total</th>
 				</tr>
-				{% for id in all|sort %}
-				<tr>
-					<td>{{all[id][1]}}</td>
-					<td>{{all[id][2]}}</td>
-					<td>{{tra[id][3]}}</td>
-					<td>{{tra[id][4]}}</td>
-					<td>{{all[id][4]}}</td>
-					<td>{{all[id][5]}}</td>
-					<td>{{tra[id][5]}}</td>
-					<td>{{tra[id][6]}}</td>
-					<td>{{tra[id][7]}}</td>
+					{% for id in bar|sort %}
+                <tr>
+                    <td>{{bar[id][0]}}</td>
+                    <td>{{bar[id][1]}}</td>
+                    <td>{{bar[id][2]}}</td>
+                    <td>{{bar[id][3]}}</td>
+                    <td>{{bar[id][4]}}</td>
+                    <td>{{bar[id][5]}}</td>
+                    <td>{{bar[id][6]}}</td>
+                    <td>{{bar[id][7]}}</td>
+                    <td>{{bar[id][8]}}</td>
 				</tr>
 				{% endfor %}
 			</table>
@@ -128,7 +128,7 @@
 		</div>
 
         <br>
-        <form  action="/info" method="get">
+        <form action="/message" method="get">
                 <button type="submit" class="btn btn-primary"  style="margin-left: 50px">Refrescar la página</button>
         </form>
 		<br>

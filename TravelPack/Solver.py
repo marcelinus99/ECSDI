@@ -117,6 +117,7 @@ alojamientos = {}
 transportes = {}
 actividades = {}
 t_barato = []
+t_bar = {}
 a_barato = []
 all_l = {}
 tr_l = {}
@@ -182,6 +183,7 @@ def start():
     global t_barato
     global all_l
     global tr_l
+    global t_bar
 
     if request.method == 'POST':
         q1 = Queue()
@@ -209,18 +211,27 @@ def start():
 
         for i in range(len(allot)):
             for j in range(len(transp)):
-                if (float(max_p) >= float(allot[i][5]) + float(transp[j][6])) and (float(allot[i][5]) + float(transp[j][6]) >= float(min_p)):
-                    a_barato.append(allot[i])
-                    transp[j][7] = float(transp[j][6]) + float(allot[i][5])
-                    t_barato.append(transp[j])
+                if (float(max_p) >= float(allot[i][5]) + float(transp[j][6])) and (
+                        float(allot[i][5]) + float(transp[j][6]) >= float(min_p)):
+                    t_barato.append(
+                        [fecha_ini, fecha_fin, origen, destino, allot[i][4], allot[i][5], transp[j][5], transp[j][6],
+                         round((float(transp[j][6]) + float(allot[i][5])), 2)])
 
-        for i in range(len(a_barato)):
-            all_l[i] = a_barato[i]
+        for i in range(len(allot)):
+            if float(max_p) >= float(allot[i][5]) >= float(min_p):
+                all_l[i] = allot[i]
+
+        for i in range(len(transp)):
+            if float(max_p) >= float(transp[i][6]) >= float(min_p):
+                tr_l[i] = transp[i]
 
         for i in range(len(t_barato)):
-            tr_l[i] = t_barato[i]
+            t_bar[i] = t_barato[i]
 
-    return render_template('clientproblems.html', all=all_l, tra=tr_l, act=activ, p=peticiones)
+    if all_l is None or tr_l is None or t_bar is None or activ is None:
+        return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activ, p=peticiones)
+    else:
+        return render_template('restricted.html')
 
 
 def directory_search_message(type):
@@ -434,7 +445,6 @@ def buscarActivitats(destino, q3):
     mss_cnt += 1
 
     for i in range(len(actividades)):
-        logger.info(actividades[i][1])
         if str(actividades[i][1]) == "RESTAURANT":
             actividades[i][1] = "Lúdica"
         elif str(actividades[i][1]) == "SHOPPING":

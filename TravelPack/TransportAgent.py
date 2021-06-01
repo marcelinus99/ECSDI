@@ -245,8 +245,7 @@ def comunicacion():
                     trip_fin = gm.value(subject=content, predicate=ECSDI.FI)
                     city_in = gm.value(subject=content, predicate=ECSDI.CityIN)
                     city_fin = gm.value(subject=content, predicate=ECSDI.CityFIN)
-                    solution = solver(trip_in,trip_fin,city_in,city_fin)
-                    logger.info(solution)
+                    solution = solver(trip_in, trip_fin, city_in, city_fin)
                     for value in solution:
                         clave = value
                         valor = solution[value]
