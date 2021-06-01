@@ -211,7 +211,6 @@ def start():
             for j in range(len(transp)):
                 if (float(max_p) >= float(allot[i][5]) + float(transp[j][6])) and (float(allot[i][5]) + float(transp[j][6]) >= float(min_p)):
                     a_barato.append(allot[i])
-                    logger.info(float(transp[j][6]) + float(allot[i][5]))
                     transp[j][7] = float(transp[j][6]) + float(allot[i][5])
                     t_barato.append(transp[j])
 
@@ -431,16 +430,16 @@ def buscarActivitats(destino, q3):
         tipo = gr_act.value(subject=objects, predicate=ECSDI.Tipo)
         actividades[i] = [nom, tipo]
         i += 1
-    logger.info('Respuesta actividades recibida')
+    logger.info('Respuesta activitats recibida')
     mss_cnt += 1
 
     for i in range(len(actividades)):
         logger.info(actividades[i][1])
-        if actividades[i][1] == "RESTAURANT":
+        if str(actividades[i][1]) == "RESTAURANT":
             actividades[i][1] = "Lúdica"
-        elif actividades[i][1] == "SHOPPING":
+        elif str(actividades[i][1]) == "SHOPPING":
             actividades[i][1] = "Festiva"
-        elif actividades[i][1] == "SIGHTS":
+        elif str(actividades[i][1]) == "SIGHTS":
             actividades[i][1] = "Cultural"
         else:
             actividades[i][1] = "Lúdica"
@@ -453,7 +452,7 @@ def infoagent_search_message(addr, ragn_uri):
     Envia una accion a un agente de informacion
     """
     global mss_cnt
-    # logger.info('Hacemos una peticion al servicio de informacion')
+    logger.info('Hacemos una peticion al servicio de informacion')
 
     gmess = Graph()
 
@@ -471,7 +470,7 @@ def infoagent_search_message(addr, ragn_uri):
                         msgcnt=mss_cnt)
     gr = send_message(msg, addr)
     mss_cnt += 1
-    # logger.info('Recibimos respuesta a la peticion al servicio de informacion')
+    logger.info('Recibimos respuesta a la peticion al servicio de informacion')
 
     return gr
 
