@@ -112,14 +112,14 @@ def info():
     return a
 
 
-def solver(city):
+def solver(cityc,cultural,festivas,ludicas):
     """
     Hace la resolucion de un problema
 
     :param param:
     :return:
     """
-    res = search_activity(city)
+    res = search_activity(cityc,cultural,festivas,ludicas)
     return res
 
 
@@ -221,7 +221,11 @@ def comunicacion():
                 accion = gm.value(subject=content, predicate=RDF.type)
                 if accion == ECSDI.VIAJE:
                     c = gm.value(subject=content, predicate=ECSDI.City)
-                    solution = solver(c)
+                    cultural = gm.value(subject=content, predicate=ECSDI.Cultural)
+                    festivas = gm.value(subject=content, predicate=ECSDI.Festiva)
+                    ludicas = gm.value(subject=content, predicate=ECSDI.Ludica)
+
+                    solution = solver(c,cultural,festivas,ludicas)
                     for value in solution:
                         clave = value
                         valor = solution[value]

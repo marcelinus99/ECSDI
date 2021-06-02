@@ -139,12 +139,12 @@ def iface():
     """
     Interfaz con el solver a traves de una pagina de web
     """
-    global allot
+    global allot2
     global transp
     global activ
 
-    citylist = ['Barcelona', 'Madrid', 'Paris', 'Milan', 'Londres', 'Munich', 'NuevaYork', 'Berlin']
-    activity = ['Nada', 'Algo', 'Normal', 'Mucho']
+    citylist = ['Barcelona', 'Madrid', 'Paris', 'Londres', 'NuevaYork', 'Berlin']
+    activity = ['Sí','No']
     return render_template('iface.html', cities=citylist, activitytype=activity, all=allot, tra=transp, act=activ)
 
 
@@ -189,6 +189,9 @@ def start():
         q1 = Queue()
         q2 = Queue()
         q3 = Queue()
+        ludicas = request.form['ludic-activities']
+        festivas = request.form['party-activities']
+        cultural = request.form['cultural-activities']
         origen = request.form['origin-city']
         destino = request.form['destination-city']
         fecha_ini = request.form['trip-start']
@@ -198,7 +201,7 @@ def start():
         if (str(origen) != str(destino)) and (min_p <= max_p):
             p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino, q1))
             p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino, q2))
-            p3 = Process(target=buscarActivitats, args=(destino, q3))
+            p3 = Process(target=buscarActivitats, args=(destino, ludicas, festivas, cultural, q3))
             p1.start()
             p2.start()
             p3.start()
@@ -229,9 +232,14 @@ def start():
             for i in range(len(t_barato)):
                 t_bar[i] = t_barato[i]
 
+            print(all_l)
+            print(tr_l)
+            print(t_bar)
+            print(activ)
     if len(all_l) == 0 or len(tr_l) == 0 or len(t_bar) == 0 or len(activ) == 0:
         return render_template('restricted.html')
     else:
+        logger.info('printeeeooooooo')
         return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activ, p=peticiones)
 
 
@@ -413,7 +421,7 @@ def buscarAllotjament(fecha_ini, fecha_fin, destino, q2):
     q2.put(allot)
 
 
-def buscarActivitats(destino, q3):
+def buscarActivitats(destino, ludicas, festivas, cultural, q3):
     global mss_cnt
     global actividades
     global activ
@@ -424,6 +432,9 @@ def buscarActivitats(destino, q3):
     reg_obj = ECSDI[Solver.name + '-info-sendAc']
     grafo.add((reg_obj, RDF.type, ECSDI.VIAJE))
     grafo.add((reg_obj, ECSDI.City, Literal(destino, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.Cultural, Literal(cultural, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.Festiva, Literal(festivas, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.Ludica, Literal(ludicas, datatype=XSD.string)))
 
     msg = gr.value(predicate=RDF.type, object=ACL.FipaAclMessage)
     content = gr.value(subject=msg, predicate=ACL.content)
@@ -446,11 +457,11 @@ def buscarActivitats(destino, q3):
     mss_cnt += 1
 
     for i in range(len(actividades)):
-        if str(actividades[i][1]) == "RESTAURANT":
+        if str(actividades[i][1]) == "L":
             actividades[i][1] = "Lúdica"
-        elif str(actividades[i][1]) == "SHOPPING":
+        elif str(actividades[i][1]) == "F":
             actividades[i][1] = "Festiva"
-        elif str(actividades[i][1]) == "SIGHTS":
+        elif str(actividades[i][1]) == "C":
             actividades[i][1] = "Cultural"
         else:
             actividades[i][1] = "Lúdica"
