@@ -18,8 +18,8 @@ Solver
 :Created on: 18/05/2021 17:06
 
 """
-
-from datetime import date
+import random
+from datetime import date, timedelta
 from multiprocessing import Process, Queue, Pipe
 from Util import gethostname
 import socket
@@ -171,7 +171,7 @@ def stop():
 
 @app.route("/message", methods=['GET', 'POST'])
 def start():
-    global allot
+    global allot, activities
     global transp
     global activ
 
@@ -196,10 +196,11 @@ def start():
         destino = request.form['destination-city']
         fecha_ini = request.form['trip-start']
         fecha_fin = request.form['trip-end']
-        fi = fecha_ini.split('/')
-        fn = fecha_fin.split('/')
-        d0 = date(int(fi[0]), int(fi[1]), int(fi[2]))
-        d1 = date(int(fn[0]), int(fn[1]), int(fn[2]))
+        logger.info(fecha_ini)
+        fi = fecha_ini.split('-')
+        fn = fecha_fin.split('-')
+        d0 = date(int(str(fi[0])), int(str(fi[1])), int(str(fi[2])))
+        d1 = date(int(str(fn[0])), int(str(fn[1])), int(str(fn[2])))
         delt = d1 - d0
 
         max_p = request.form['price-max']
@@ -219,9 +220,23 @@ def start():
             activ = q3.get()
             peticiones += 1
             activities = {}
-
-            for i in range(delt.days):
+            keys = list(activ.keys())
+            random.shuffle(keys)
+            for i in range(delt.days*3):
                 activities[i] = activ[i]
+                if i%3 == 0:
+                    activities[i][5] = "Mañana"
+                elif i%3 == 1:
+                    activities[i][5] = "Tarde"
+                elif i%3 == 2:
+                    activities[i][5] = "Noche"
+
+            d1 = date(int(str(fn[0])), int(str(fn[1])), int(str(fn[2])))
+            i = 0
+            for single_date in daterange(d0, d1):
+                for j in range(0, 3):
+                    activities[i][4] = single_date.strftime("%Y-%m-%d")
+                    i += 1
 
             for i in range(len(allot)):
                 for j in range(len(transp)):
@@ -242,15 +257,20 @@ def start():
             for i in range(len(t_barato)):
                 t_bar[i] = t_barato[i]
 
-            print(all_l)
+            """print(all_l)
             print(tr_l)
             print(t_bar)
-            print(activ)
+            print(activ)"""
     if len(all_l) == 0 or len(tr_l) == 0 or len(t_bar) == 0 or len(activ) == 0:
         return render_template('restricted.html')
     else:
-        logger.info('printeeeooooooo')
         return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activities, p=peticiones)
+
+
+def daterange(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
 
 
 def directory_search_message(type):
@@ -475,7 +495,7 @@ def buscarActivitats(destino, ludicas, festivas, cultural, q3):
             actividades[i][1] = "Cultural"
         else:
             actividades[i][1] = "Lúdica"
-        activ[i] = ['REQACTIVITAT', destino, actividades[i][0], actividades[i][1]]
+        activ[i] = ['REQACTIVITAT', destino, actividades[i][0], actividades[i][1], "01/01/1970", "------"]
     q3.put(activ)
 
 
