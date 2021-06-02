@@ -19,6 +19,7 @@ Solver
 
 """
 
+from datetime import date
 from multiprocessing import Process, Queue, Pipe
 from Util import gethostname
 import socket
@@ -184,7 +185,6 @@ def start():
     global all_l
     global tr_l
     global t_bar
-
     if request.method == 'POST':
         q1 = Queue()
         q2 = Queue()
@@ -196,6 +196,12 @@ def start():
         destino = request.form['destination-city']
         fecha_ini = request.form['trip-start']
         fecha_fin = request.form['trip-end']
+        fi = fecha_ini.split('/')
+        fn = fecha_fin.split('/')
+        d0 = date(int(fi[0]), int(fi[1]), int(fi[2]))
+        d1 = date(int(fn[0]), int(fn[1]), int(fn[2]))
+        delt = d1 - d0
+
         max_p = request.form['price-max']
         min_p = request.form['price-min']
         if (str(origen) != str(destino)) and (min_p <= max_p):
@@ -212,6 +218,10 @@ def start():
             transp = q2.get()
             activ = q3.get()
             peticiones += 1
+            activities = {}
+
+            for i in range(delt.days):
+                activities[i] = activ[i]
 
             for i in range(len(allot)):
                 for j in range(len(transp)):
@@ -240,7 +250,7 @@ def start():
         return render_template('restricted.html')
     else:
         logger.info('printeeeooooooo')
-        return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activ, p=peticiones)
+        return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activities, p=peticiones)
 
 
 def directory_search_message(type):
