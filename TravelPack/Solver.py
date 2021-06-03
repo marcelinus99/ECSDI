@@ -145,7 +145,7 @@ def iface():
     global activ
 
     citylist = ['Barcelona', 'Madrid', 'Paris', 'Londres', 'NuevaYork', 'Berlin']
-    activity = ['Sí','No']
+    activity = ['Sí', 'No']
     return render_template('iface.html', cities=citylist, activitytype=activity, all=allot, tra=transp, act=activ)
 
 
@@ -205,7 +205,7 @@ def start():
 
         max_p = request.form['price-max']
         min_p = request.form['price-min']
-        if (str(origen) != str(destino)) and (min_p <= max_p):
+        if (str(origen) != str(destino)) and (min_p <= max_p) and (d0 < d1):
             p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino, q1))
             p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino, q2))
             p3 = Process(target=buscarActivitats, args=(destino, ludicas, festivas, cultural, q3))
@@ -224,11 +224,11 @@ def start():
             random.shuffle(keys)
             for i in range(delt.days*3):
                 activities[i] = activ[i]
-                if i%3 == 0:
+                if i % 3 == 0:
                     activities[i][5] = "Mañana"
-                elif i%3 == 1:
+                elif i % 3 == 1:
                     activities[i][5] = "Tarde"
-                elif i%3 == 2:
+                elif i % 3 == 2:
                     activities[i][5] = "Noche"
 
             d1 = date(int(str(fn[0])), int(str(fn[1])), int(str(fn[2])))
@@ -257,10 +257,6 @@ def start():
             for i in range(len(t_barato)):
                 t_bar[i] = t_barato[i]
 
-            """print(all_l)
-            print(tr_l)
-            print(t_bar)
-            print(activ)"""
     if len(all_l) == 0 or len(tr_l) == 0 or len(t_bar) == 0 or len(activ) == 0:
         return render_template('restricted.html')
     else:
@@ -373,9 +369,9 @@ def buscarTransport(fecha_ini, fecha_fin, origen, destino, q1):
     logger.info('Enviamos informacion a transport')
     grafo = Graph()
     reg_obj = ECSDI[Solver.name + '-info-sendTran']
-    grafo.add((reg_obj, RDF.type, ECSDI.LLEGAR))
-    grafo.add((reg_obj, ECSDI.INI, Literal(fecha_ini, datatype=XSD.string)))
-    grafo.add((reg_obj, ECSDI.FI, Literal(fecha_fin, datatype=XSD.string)))
+    grafo.add((reg_obj, RDF.type, ECSDI.VIAJE))
+    grafo.add((reg_obj, ECSDI.FechaInicio, Literal(fecha_ini, datatype=XSD.string)))
+    grafo.add((reg_obj, ECSDI.FechaFinal, Literal(fecha_fin, datatype=XSD.string)))
     grafo.add((reg_obj, ECSDI.CityIN, Literal(origen, datatype=XSD.string)))
     grafo.add((reg_obj, ECSDI.CityFIN, Literal(destino, datatype=XSD.string)))
 
@@ -391,7 +387,7 @@ def buscarTransport(fecha_ini, fecha_fin, origen, destino, q1):
                         msgcnt=mss_cnt)
     gr_allot = send_message(msg, ragn_addr)
     i = 0
-    for objects in gr_allot.subjects(RDF.type, ECSDI.FlightsAgent):
+    for objects in gr_allot.subjects(RDF.type, ECSDI.Transporte):
         nom = gr_allot.value(subject=objects, predicate=ECSDI.Nombre)
         precio = gr_allot.value(subject=objects, predicate=ECSDI.Precio)
         transportes[i] = [nom, precio]

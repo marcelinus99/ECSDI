@@ -240,9 +240,9 @@ def comunicacion():
             if 'content' in msgdic:
                 content = msgdic['content']
                 accion = gm.value(subject=content, predicate=RDF.type)
-                if accion == ECSDI.LLEGAR:
-                    trip_in = gm.value(subject=content, predicate=ECSDI.INI)
-                    trip_fin = gm.value(subject=content, predicate=ECSDI.FI)
+                if accion == ECSDI.VIAJE:
+                    trip_in = gm.value(subject=content, predicate=ECSDI.FechaInicio)
+                    trip_fin = gm.value(subject=content, predicate=ECSDI.FechaFinal)
                     city_in = gm.value(subject=content, predicate=ECSDI.CityIN)
                     city_fin = gm.value(subject=content, predicate=ECSDI.CityFIN)
                     solution = solver(trip_in, trip_fin, city_in, city_fin)
@@ -250,7 +250,7 @@ def comunicacion():
                         clave = value
                         valor = solution[value]
                         reg_obj = ECSDI[FlightsAgent.name + '-response' + value]
-                        respuesta.add((reg_obj, RDF.type, ECSDI.FlightsAgent))
+                        respuesta.add((reg_obj, RDF.type, ECSDI.Transporte))
                         respuesta.add((reg_obj, ECSDI.Nombre, Literal(clave, datatype=XSD.string)))
                         respuesta.add((reg_obj, ECSDI.Precio, Literal(valor)))
 
