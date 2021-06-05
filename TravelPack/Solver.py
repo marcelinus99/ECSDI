@@ -205,7 +205,17 @@ def start():
 
         max_p = request.form['price-max']
         min_p = request.form['price-min']
-        if (str(origen) != str(destino)) and (min_p <= max_p) and (d0 < d1):
+        if str(origen) == str(destino):
+            return render_template('restricted.html', error="La ciudad de origen es la misma que la de destino.")
+        elif int(delt.days) > 10:
+            return render_template('restricted.html', error="El tiempo máximo de un viaje en nuestro sistema son 10 días.")
+        elif int(str(min_p)) >= int(str(max_p)):
+            return render_template('restricted.html', error="El precio mínimo es igual o superior al precio máximo.")
+        elif str(cultural) == "No" or str(festivas) == "No" or str(ludicas) == "No":
+            return render_template('restricted.html', error="No has marcado ningún tipo de actividad.")
+        elif d0 >= d1:
+            return render_template('restricted.html', error="La fecha de retorno es posterior o igual a la de salida.")
+        else:
             p1 = Process(target=buscarAllotjament, args=(fecha_ini, fecha_fin, destino, q1))
             p2 = Process(target=buscarTransport, args=(fecha_ini, fecha_fin, origen, destino, q2))
             p3 = Process(target=buscarActivitats, args=(destino, ludicas, festivas, cultural, q3))
@@ -257,8 +267,15 @@ def start():
             for i in range(len(t_barato)):
                 t_bar[i] = t_barato[i]
 
-    if len(all_l) == 0 or len(tr_l) == 0 or len(t_bar) == 0 or len(activ) == 0:
-        return render_template('restricted.html')
+    if len(all_l) == 0:
+        return render_template('restricted.html', error="No se han encontrado alojamientos en la ciudad indicada.")
+    elif len(tr_l) == 0:
+        return render_template('restricted.html', error="No se ha encontrado ningún transporte entre las ciudades indicadas.")
+    elif len(t_bar) == 0:
+        return render_template('restricted.html',
+                               error="No se ha encontrado ninguna combinación de transporte y alojamiento con el rango de precios indicado.")
+    elif len(activ) == 0:
+        return render_template('restricted.html', error="No se ha encontrado ninguna actividad en la ciudad indicada.")
     else:
         return render_template('clientproblems.html', all=all_l, tra=tr_l, bar=t_bar, act=activities, p=peticiones)
 
