@@ -211,7 +211,7 @@ def start():
             return render_template('restricted.html', error="El tiempo máximo de un viaje en nuestro sistema son 10 días.")
         elif int(str(min_p)) >= int(str(max_p)):
             return render_template('restricted.html', error="El precio mínimo es igual o superior al precio máximo.")
-        elif str(cultural) == "No" or str(festivas) == "No" or str(ludicas) == "No":
+        elif str(cultural) == "No" and str(festivas) == "No" and str(ludicas) == "No":
             return render_template('restricted.html', error="No has marcado ningún tipo de actividad.")
         elif d0 >= d1:
             return render_template('restricted.html', error="La fecha de retorno es posterior o igual a la de salida.")
