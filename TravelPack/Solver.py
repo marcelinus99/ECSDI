@@ -144,7 +144,7 @@ def iface():
     global transp
     global activ
 
-    citylist = ['Barcelona', 'Madrid', 'Paris', 'Londres', 'NuevaYork', 'Berlin']
+    citylist = ['Barcelona', 'Paris', 'Londres', 'NuevaYork', 'Berlin']
     activity = ['Sí', 'No']
     return render_template('iface.html', cities=citylist, activitytype=activity, all=allot, tra=transp, act=activ)
 
