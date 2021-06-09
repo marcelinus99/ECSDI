@@ -5,7 +5,7 @@ import foursquare
 from amadeus import Client, ResponseError
 from TravelPack.pyairports.airports import Airports
 
-amadeus = Client(client_id='YDp2dotKO0oTzRQ2EALTAKVH4cY1D1Qm', client_secret='0v2nA55ooj6PKVgm')
+amadeus = Client(client_id='QNppZ2TNRjnAwfVcSCxtAjGd8G6WLyR3', client_secret='T6PveDEkKRyRqgnZ')
 
 IATA = {'Barcelona': 'BCN', 'Madrid': 'MAD', 'Paris': 'PAR', 'Milan': 'MIL', 'Londres': 'LON',
         'NuevaYork': 'NYC', 'Berlin': 'BER'}
